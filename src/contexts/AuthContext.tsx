@@ -1,111 +1,131 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
-interface User {
+interface Profile {
   id: string;
-  email: string;
-  name: string;
-  tenantId: string;
-  role: 'admin' | 'user';
+  full_name: string;
+  role: 'admin' | 'viewer';
+  tenant_id: string;
 }
 
 interface Tenant {
   id: string;
   name: string;
   plan: 'free' | 'premium';
-  createdAt: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: SupabaseUser | null;
+  session: Session | null;
+  profile: Profile | null;
   tenant: Tenant | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedTenant = localStorage.getItem('tenant');
-    
-    if (storedUser && storedTenant) {
-      setUser(JSON.parse(storedUser));
-      setTenant(JSON.parse(storedTenant));
+  const fetchProfileAndTenant = async (userId: string) => {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id, full_name, role, tenant_id')
+      .eq('id', userId)
+      .single();
+
+    if (profileData) {
+      setProfile(profileData);
+
+      const { data: tenantData } = await supabase
+        .from('tenants')
+        .select('id, name, plan')
+        .eq('id', profileData.tenant_id)
+        .single();
+
+      if (tenantData) {
+        setTenant(tenantData);
+      }
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        setTimeout(() => {
+          fetchProfileAndTenant(session.user.id);
+        }, 0);
+      } else {
+        setProfile(null);
+        setTenant(null);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfileAndTenant(session.user.id).finally(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
+      }
+    });
   }, []);
 
-  const signup = async (email: string, password: string, name: string): Promise<boolean> => {
-    const newTenant: Tenant = {
-      id: `tenant_${Date.now()}`,
-      name: email.split('@')[0],
-      plan: 'free',
-      createdAt: new Date().toISOString(),
-    };
-
-    const newUser: User = {
-      id: `user_${Date.now()}`,
+  const signup = async (email: string, password: string, name: string) => {
+    const { error } = await supabase.auth.signUp({
       email,
-      name,
-      tenantId: newTenant.id,
-      role: 'admin',
-    };
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          full_name: name,
+        },
+      },
+    });
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    users.push({ ...newUser, password });
-    localStorage.setItem('users', JSON.stringify(users));
-
-    const tenants = JSON.parse(localStorage.getItem('tenants') || '[]');
-    tenants.push(newTenant);
-    localStorage.setItem('tenants', JSON.stringify(tenants));
-
-    localStorage.setItem('user', JSON.stringify(newUser));
-    localStorage.setItem('tenant', JSON.stringify(newTenant));
-
-    setUser(newUser);
-    setTenant(newTenant);
-
-    return true;
-  };
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const foundUser = users.find((u: any) => u.email === email && u.password === password);
-
-    if (!foundUser) {
-      return false;
+    if (error) {
+      return { error: error.message };
     }
 
-    const tenants = JSON.parse(localStorage.getItem('tenants') || '[]');
-    const foundTenant = tenants.find((t: Tenant) => t.id === foundUser.tenantId);
-
-    const { password: _, ...userWithoutPassword } = foundUser;
-
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    localStorage.setItem('tenant', JSON.stringify(foundTenant));
-
-    setUser(userWithoutPassword);
-    setTenant(foundTenant);
-
-    return true;
+    return { error: null };
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('tenant');
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
+    setProfile(null);
     setTenant(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, tenant, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, profile, tenant, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

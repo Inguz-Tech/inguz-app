@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 
 const Settings = () => {
-  const { user, tenant } = useAuth();
+  const { profile, tenant } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,16 +47,16 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label>Nome</Label>
-                <Input value={user?.name || ''} />
+                <Input value={profile?.full_name || ''} />
               </div>
               <div>
-                <Label>Email</Label>
-                <Input value={user?.email || ''} disabled />
+                <Label>ID do Usuário</Label>
+                <Input value={profile?.id || ''} disabled />
               </div>
               <div>
                 <Label>Função</Label>
                 <div className="mt-2">
-                  <Badge>{user?.role === 'admin' ? 'Administrador' : 'Usuário'}</Badge>
+                  <Badge>{profile?.role === 'admin' ? 'Administrador' : 'Visualizador'}</Badge>
                 </div>
               </div>
               <Button>Salvar Alterações</Button>

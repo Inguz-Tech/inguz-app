@@ -18,13 +18,13 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login(email, password);
+    const { error } = await login(email, password);
 
-    if (success) {
+    if (!error) {
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } else {
-      toast.error('Email ou senha incorretos');
+      toast.error(error);
     }
 
     setIsLoading(false);

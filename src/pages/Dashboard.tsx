@@ -9,15 +9,8 @@ import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
-
-const mockData = [
-  { time: '00:00', sent: 45, received: 67 },
-  { time: '04:00', sent: 32, received: 54 },
-  { time: '08:00', sent: 89, received: 123 },
-  { time: '12:00', sent: 145, received: 198 },
-  { time: '16:00', sent: 167, received: 223 },
-  { time: '20:00', sent: 98, received: 145 },
-];
+import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useGraphData } from '@/hooks/useGraphData';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +18,9 @@ const Dashboard = () => {
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(dateRange.from, dateRange.to);
+  const { data: graphData, isLoading: graphLoading } = useGraphData(dateRange.from, dateRange.to);
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,8 +52,10 @@ const Dashboard = () => {
               <MessageSquare className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,234</div>
-              <p className="text-xs text-muted-foreground">+12% em relação ao período anterior</p>
+              <div className="text-2xl font-bold">
+                {metricsLoading ? '...' : metrics?.totalConversations || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Total no período selecionado</p>
             </CardContent>
           </Card>
 
@@ -67,8 +65,10 @@ const Dashboard = () => {
               <Send className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8,567</div>
-              <p className="text-xs text-muted-foreground">+8% em relação ao período anterior</p>
+              <div className="text-2xl font-bold">
+                {metricsLoading ? '...' : metrics?.messagesSent || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Total no período selecionado</p>
             </CardContent>
           </Card>
 
@@ -78,8 +78,10 @@ const Dashboard = () => {
               <Inbox className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12,345</div>
-              <p className="text-xs text-muted-foreground">+15% em relação ao período anterior</p>
+              <div className="text-2xl font-bold">
+                {metricsLoading ? '...' : metrics?.messagesReceived || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Total no período selecionado</p>
             </CardContent>
           </Card>
         </div>
@@ -89,16 +91,20 @@ const Dashboard = () => {
             <CardTitle>Mensagens ao Longo do Tempo</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="sent" stroke="hsl(var(--primary))" name="Enviadas" />
-                <Line type="monotone" dataKey="received" stroke="hsl(var(--muted-foreground))" name="Recebidas" />
-              </LineChart>
-            </ResponsiveContainer>
+            {graphLoading ? (
+              <div className="flex h-[300px] items-center justify-center">Carregando...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={graphData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="sent" stroke="hsl(var(--primary))" name="Enviadas" />
+                  <Line type="monotone" dataKey="received" stroke="hsl(var(--muted-foreground))" name="Recebidas" />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 

@@ -26,13 +26,13 @@ const Signup = () => {
 
     setIsLoading(true);
 
-    const success = await signup(email, password, name);
+    const { error } = await signup(email, password, name);
 
-    if (success) {
-      toast.success('Conta criada com sucesso! Plano Free ativado.');
-      navigate('/dashboard');
+    if (!error) {
+      toast.success('Conta criada! Verifique seu email para confirmar.');
+      navigate('/login');
     } else {
-      toast.error('Erro ao criar conta');
+      toast.error(error);
     }
 
     setIsLoading(false);
