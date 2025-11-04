@@ -5,8 +5,11 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 interface Profile {
   id: string;
   full_name: string;
-  role: 'admin' | 'viewer';
   tenant_id: string;
+}
+
+interface UserRole {
+  role: 'admin' | 'viewer';
 }
 
 interface Tenant {
@@ -20,6 +23,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   tenant: Tenant | null;
+  role: 'admin' | 'viewer' | null;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
   signup: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
@@ -33,17 +37,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [role, setRole] = useState<'admin' | 'viewer' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfileAndTenant = async (userId: string) => {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('id, full_name, role, tenant_id')
+      .select('id, full_name, tenant_id')
       .eq('id', userId)
       .single();
 
     if (profileData) {
       setProfile(profileData);
+
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (roleData) {
+        setRole(roleData.role);
+      }
 
       const { data: tenantData } = await supabase
         .from('tenants')
@@ -69,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setProfile(null);
         setTenant(null);
+        setRole(null);
       }
     });
 
@@ -122,10 +138,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
     setProfile(null);
     setTenant(null);
+    setRole(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, tenant, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, profile, tenant, role, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

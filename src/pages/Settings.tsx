@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 
 const Settings = () => {
-  const { profile, tenant } = useAuth();
+  const { profile, tenant, role } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,7 +56,7 @@ const Settings = () => {
               <div>
                 <Label>Função</Label>
                 <div className="mt-2">
-                  <Badge>{profile?.role === 'admin' ? 'Administrador' : 'Visualizador'}</Badge>
+                  <Badge>{role === 'admin' ? 'Administrador' : 'Visualizador'}</Badge>
                 </div>
               </div>
               <Button>Salvar Alterações</Button>
