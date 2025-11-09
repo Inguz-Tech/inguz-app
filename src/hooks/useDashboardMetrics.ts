@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { differenceInDays } from 'date-fns';
 
 interface DashboardMetrics {
   totalConversations: number;
@@ -7,35 +8,40 @@ interface DashboardMetrics {
   messagesReceived: number;
 }
 
-export const useDashboardMetrics = (startDate: Date, endDate: Date) => {
+export const useDashboardMetrics = (tenantId: string | undefined, startDate: Date, endDate: Date) => {
   return useQuery({
-    queryKey: ['dashboard-metrics', startDate, endDate],
+    queryKey: ['dashboard-metrics', tenantId, startDate, endDate],
     queryFn: async (): Promise<DashboardMetrics> => {
-      const { data: conversations } = await supabase
-        .from('conversations')
-        .select('id', { count: 'exact' })
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+      if (!tenantId) {
+        return {
+          totalConversations: 0,
+          messagesSent: 0,
+          messagesReceived: 0,
+        };
+      }
 
-      const { data: sentMessages } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact' })
-        .eq('sender_type', 'agent')
-        .gte('timestamp', startDate.toISOString())
-        .lte('timestamp', endDate.toISOString());
+      const daysBack = differenceInDays(endDate, startDate);
 
-      const { data: receivedMessages } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact' })
-        .eq('sender_type', 'contact')
-        .gte('timestamp', startDate.toISOString())
-        .lte('timestamp', endDate.toISOString());
+      const { data, error } = await supabase.rpc('get_dashboard_metrics', {
+        p_tenant_id: tenantId,
+        p_days_back: daysBack,
+      });
+
+      if (error) {
+        console.error('Error fetching dashboard metrics:', error);
+        return {
+          totalConversations: 0,
+          messagesSent: 0,
+          messagesReceived: 0,
+        };
+      }
 
       return {
-        totalConversations: conversations?.length || 0,
-        messagesSent: sentMessages?.length || 0,
-        messagesReceived: receivedMessages?.length || 0,
+        totalConversations: data?.total_conversations || 0,
+        messagesSent: data?.messages_sent || 0,
+        messagesReceived: data?.messages_received || 0,
       };
     },
+    enabled: !!tenantId,
   });
 };

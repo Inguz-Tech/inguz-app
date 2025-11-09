@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,12 +15,13 @@ import { useGraphData } from '@/hooks/useGraphData';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { tenant } = useAuth();
   const [dateRange, setDateRange] = useState({
     from: subDays(new Date(), 7),
     to: new Date(),
   });
 
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(dateRange.from, dateRange.to);
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(tenant?.id, dateRange.from, dateRange.to);
   const { data: graphData, isLoading: graphLoading } = useGraphData(dateRange.from, dateRange.to);
 
   return (
