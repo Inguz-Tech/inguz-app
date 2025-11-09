@@ -8,14 +8,19 @@ interface GraphDataPoint {
   received: number;
 }
 
-export const useGraphData = (startDate: Date, endDate: Date) => {
+export const useGraphData = (tenantId: string | undefined, startDate: Date, endDate: Date) => {
   return useQuery({
-    queryKey: ['graph-data', startDate, endDate],
+    queryKey: ['graph-data', tenantId, startDate, endDate],
     queryFn: async (): Promise<GraphDataPoint[]> => {
+      if (!tenantId) {
+        return [];
+      }
+
       const daysDiff = differenceInDays(endDate, startDate);
       const truncType = daysDiff <= 2 ? 'hour' : 'day';
 
       const { data, error } = await supabase.rpc('get_messages_graph_data', {
+        p_tenant_id: tenantId,
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
         trunc_type: truncType,
@@ -28,5 +33,6 @@ export const useGraphData = (startDate: Date, endDate: Date) => {
 
       return data || [];
     },
+    enabled: !!tenantId,
   });
 };

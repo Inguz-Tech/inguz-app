@@ -22,7 +22,7 @@ const Dashboard = () => {
   });
 
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(tenant?.id, dateRange.from, dateRange.to);
-  const { data: graphData, isLoading: graphLoading } = useGraphData(dateRange.from, dateRange.to);
+  const { data: graphData, isLoading: graphLoading } = useGraphData(tenant?.id, dateRange.from, dateRange.to);
 
   return (
     <div className="min-h-screen bg-background">
