@@ -26,11 +26,11 @@ const Conversations = () => {
     <div className="h-[calc(100vh-4rem)] bg-background">
       <div className="grid h-full grid-cols-12">
         {/* Lista de Conversas */}
-        <div className="col-span-3 border-r">
-          <div className="border-b p-4">
+        <div className="col-span-3 border-r flex flex-col">
+          <div className="border-b p-4 flex-shrink-0">
             <h2 className="text-lg font-semibold">Conversas</h2>
           </div>
-          <ScrollArea className="h-[calc(100%-5rem)]">
+          <ScrollArea className="flex-1">
             {conversationsLoading ? (
               <div className="p-4 text-center">Carregando...</div>
             ) : conversations && conversations.length > 0 ? (
@@ -69,7 +69,8 @@ const Conversations = () => {
         <div className="col-span-6 flex flex-col">
           {contactDetails ? (
             <>
-              <div className="border-b p-4">
+              {/* Cabeçalho Fixo */}
+              <div className="border-b p-4 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <Avatar>
                     <AvatarFallback>{contactDetails.name[0]}</AvatarFallback>
@@ -81,8 +82,9 @@ const Conversations = () => {
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
+              {/* Área de Mensagens com Scroll Independente */}
+              <ScrollArea className="flex-1">
+                <div className="p-4 space-y-4">
                   {messages && messages.length > 0 ? (
                     messages.map((message) => (
                       <div
@@ -116,12 +118,12 @@ const Conversations = () => {
           )}
         </div>
 
-        {/* Detalhes do Contato */}
-        <div className="col-span-3 border-l">
-          <div className="border-b p-4">
+        {/* Detalhes do Contato - Estático */}
+        <div className="col-span-3 border-l flex flex-col">
+          <div className="border-b p-4 flex-shrink-0">
             <h2 className="text-lg font-semibold">Detalhes do Contato</h2>
           </div>
-          <ScrollArea className="h-[calc(100%-5rem)]">
+          <div className="flex-1 overflow-y-auto">
             {contactDetails ? (
               <div className="p-4 space-y-6">
                 <div className="flex flex-col items-center">
@@ -171,7 +173,7 @@ const Conversations = () => {
                 Selecione uma conversa para ver os detalhes
               </div>
             )}
-          </ScrollArea>
+          </div>
         </div>
       </div>
     </div>
