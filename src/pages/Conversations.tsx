@@ -87,16 +87,16 @@ const Conversations = () => {
                     messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex ${message.sender_type === 'agent' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${message.sender_type === 'Agent' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`max-w-[70%] rounded-lg p-3 ${
-                            message.sender_type === 'agent'
+                            message.sender_type === 'Agent'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted text-foreground'
                           }`}
                         >
-                          <p>{message.content}</p>
+                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
                           <span className="mt-1 block text-xs opacity-70">
                             {format(new Date(message.timestamp), 'HH:mm')}
                           </span>

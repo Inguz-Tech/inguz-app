@@ -5,7 +5,7 @@ export interface Message {
   id: string;
   content: string;
   timestamp: string;
-  sender_type: 'agent' | 'contact';
+  sender_type: 'Agent' | 'CLIENT';
   message_type: string;
 }
 
