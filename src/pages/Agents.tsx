@@ -2,25 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Bot } from 'lucide-react';
-
-const mockAgents = [
-  {
-    id: '1',
-    name: 'Agente de Vendas',
-    status: 'active',
-    conversations: 234,
-    description: 'Atendimento automatizado para vendas',
-  },
-  {
-    id: '2',
-    name: 'Suporte Técnico',
-    status: 'active',
-    conversations: 145,
-    description: 'Suporte técnico automatizado',
-  },
-];
+import { useAuth } from '@/contexts/AuthContext';
+import { useAgents } from '@/hooks/useAgents';
+import { useAgentStats } from '@/hooks/useAgentStats';
 
 const Agents = () => {
+  const { tenant } = useAuth();
+  const { data: agents, isLoading } = useAgents(tenant?.id);
+  const { data: agentStats } = useAgentStats(tenant?.id);
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -32,39 +21,61 @@ const Agents = () => {
           </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockAgents.map((agent) => (
-            <Card key={agent.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-primary/10 p-3">
-                      <Bot className="h-6 w-6 text-primary" />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">Carregando agentes...</p>
+          </div>
+        ) : agents && agents.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {agents.map((agent) => (
+              <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-full bg-primary/10 p-3">
+                        <Bot className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{agent.name}</CardTitle>
+                        <Badge variant={agent.is_active ? 'default' : 'secondary'} className="mt-1">
+                          {agent.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
                     </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    {agent.description || 'Sem descrição'}
+                  </p>
+                  <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-lg">{agent.name}</CardTitle>
-                      <Badge variant={agent.status === 'active' ? 'default' : 'secondary'} className="mt-1">
-                        {agent.status === 'active' ? 'Ativo' : 'Inativo'}
-                      </Badge>
+                      <p className="text-2xl font-bold">{agentStats?.[agent.id] || 0}</p>
+                      <p className="text-xs text-muted-foreground">Conversas</p>
                     </div>
+                    <Button variant="outline" size="sm">
+                      Editar
+                    </Button>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 text-sm text-muted-foreground">{agent.description}</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold">{agent.conversations}</p>
-                    <p className="text-xs text-muted-foreground">Conversas</p>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Editar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Bot className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium mb-2">Nenhum agente cadastrado</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Crie seu primeiro agente para começar
+              </p>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Criar Primeiro Agente
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
