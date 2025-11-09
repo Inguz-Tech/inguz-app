@@ -36,10 +36,13 @@ export const useDashboardMetrics = (tenantId: string | undefined, startDate: Dat
         };
       }
 
+      // A função RPC retorna um array, pegar o primeiro elemento
+      const result = Array.isArray(data) ? data[0] : data;
+
       return {
-        totalConversations: data?.total_conversations || 0,
-        messagesSent: data?.messages_sent || 0,
-        messagesReceived: data?.messages_received || 0,
+        totalConversations: result?.total_conversations || 0,
+        messagesSent: result?.messages_sent || 0,
+        messagesReceived: result?.messages_received || 0,
       };
     },
     enabled: !!tenantId,
