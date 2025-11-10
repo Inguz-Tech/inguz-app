@@ -37,8 +37,8 @@ const Conversations = () => {
               conversations.map((conv) => (
                 <Card
                   key={conv.id}
-                  className={`m-2 cursor-pointer p-4 hover:bg-accent ${
-                    selectedConversationId === conv.id ? 'bg-accent' : ''
+                  className={`m-2 cursor-pointer p-4 hover:bg-navy/10 ${
+                    selectedConversationId === conv.id ? 'bg-navy text-white' : ''
                   }`}
                   onClick={() => handleSelectConversation(conv.id, conv.contact_id)}
                 >
@@ -94,7 +94,7 @@ const Conversations = () => {
                         <div
                           className={`max-w-[70%] rounded-lg p-3 ${
                             message.sender_type === 'Agent'
-                              ? 'bg-primary text-primary-foreground'
+                              ? 'bg-navy text-white'
                               : 'bg-muted text-foreground'
                           }`}
                         >
