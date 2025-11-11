@@ -24,12 +24,12 @@ const Conversations = () => {
     setSelectedContactId(contactId);
   };
 
-  // Auto-scroll para o final quando selecionar uma conversa ou novas mensagens
+  // Auto-scroll para o final apenas quando selecionar uma conversa
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && selectedConversationId) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, selectedConversationId]);
+  }, [selectedConversationId]);
 
   // Renderizar mensagens com marcadores de data
   const renderMessages = () => {
