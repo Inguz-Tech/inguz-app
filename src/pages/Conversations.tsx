@@ -16,7 +16,7 @@ const Conversations = () => {
     <div className="h-[calc(100vh-4rem)] bg-background overflow-hidden">
       <div className="grid h-full grid-cols-12">
         {/* Coluna Esquerda: Lista de Conversas - 20% */}
-        <div className="col-span-2 lg:col-span-3">
+        <div className="col-span-2 lg:col-span-3 h-full">
           <ConversationList
             selectedConversationId={selectedConversationId}
             onSelectConversation={handleSelectConversation}
@@ -24,7 +24,7 @@ const Conversations = () => {
         </div>
 
         {/* Coluna Central: Área de Chat - 55-60% */}
-        <div className="col-span-6 lg:col-span-5">
+        <div className="col-span-6 lg:col-span-5 h-full">
           <ChatArea
             conversationId={selectedConversationId}
             contactId={selectedContactId}
@@ -32,7 +32,7 @@ const Conversations = () => {
         </div>
 
         {/* Coluna Direita: Detalhes do Contato - 20-25% */}
-        <div className="col-span-4 lg:col-span-4">
+        <div className="col-span-4 lg:col-span-4 h-full">
           <ContactDetails contactId={selectedContactId} />
         </div>
       </div>
