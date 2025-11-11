@@ -104,7 +104,7 @@ export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
                       <div
                         className={`max-w-[70%] rounded-lg px-3 py-2 ${
                           message.sender_type === 'Agent'
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-navy text-white'
                             : 'bg-card border'
                         }`}
                       >

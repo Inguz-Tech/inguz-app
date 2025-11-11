@@ -46,7 +46,7 @@ export const ConversationList = ({ selectedConversationId, onSelectConversation 
               <div
                 key={conv.id}
                 className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
-                  selectedConversationId === conv.id ? 'bg-accent' : ''
+                  selectedConversationId === conv.id ? 'bg-muted' : ''
                 }`}
                 onClick={() => onSelectConversation(conv.id, conv.contact_id)}
               >
