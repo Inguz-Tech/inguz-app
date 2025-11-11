@@ -129,14 +129,14 @@ const Conversations = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background">
+    <div className="h-[calc(100vh-4rem)] bg-background overflow-hidden">
       <div className="grid h-full grid-cols-12">
         {/* Lista de Conversas */}
-        <div className="col-span-3 border-r flex flex-col">
+        <div className="col-span-3 border-r flex flex-col h-full">
           <div className="border-b p-4 flex-shrink-0">
             <h2 className="text-lg font-semibold">Conversas</h2>
           </div>
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             {conversationsLoading ? (
               <div className="p-4 text-center">Carregando...</div>
             ) : conversations && conversations.length > 0 ? (
@@ -168,11 +168,11 @@ const Conversations = () => {
             ) : (
               <div className="p-4 text-center text-muted-foreground">Nenhuma conversa encontrada</div>
             )}
-          </ScrollArea>
+          </div>
         </div>
 
         {/* Área de Chat */}
-        <div className="col-span-6 flex flex-col">
+        <div className="col-span-6 flex flex-col h-full">
           {contactDetails ? (
             <>
               {/* Cabeçalho Fixo */}
@@ -224,11 +224,11 @@ const Conversations = () => {
         </div>
 
         {/* Detalhes do Contato */}
-        <div className="col-span-3 border-l flex flex-col">
+        <div className="col-span-3 border-l flex flex-col h-full">
           <div className="border-b p-4 flex-shrink-0">
             <h2 className="text-lg font-semibold">Detalhes do Contato</h2>
           </div>
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             {contactDetails ? (
               <div className="p-4 space-y-6">
                 <div className="flex flex-col items-center">
@@ -278,7 +278,7 @@ const Conversations = () => {
                 Selecione uma conversa para ver os detalhes
               </div>
             )}
-          </ScrollArea>
+          </div>
         </div>
       </div>
     </div>
