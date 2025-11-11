@@ -14,16 +14,53 @@ interface ChatAreaProps {
 }
 
 export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
-  const { data: messages } = useConversationContent(conversationId || '');
+  const { data: messages, isLoading } = useConversationContent(conversationId || '');
   const { data: contactDetails } = useContactDetails(contactId || '');
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const previousConversationId = useRef<string | null>(null);
 
+  // Scroll automático ao abrir uma conversa ou quando mensagens carregam
   useEffect(() => {
-    if (messagesEndRef.current && conversationId) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    // Detectar se é uma nova conversa sendo aberta
+    const isNewConversation = conversationId !== previousConversationId.current;
+    
+    if (messagesEndRef.current && messages && messages.length > 0) {
+      // Se é uma nova conversa, scroll instantâneo para o final
+      if (isNewConversation) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
+        setIsUserScrolling(false);
+        previousConversationId.current = conversationId;
+      } 
+      // Se não é nova conversa e o usuário não está rolando manualmente, scroll suave
+      else if (!isUserScrolling) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
-  }, [conversationId]);
+  }, [messages, conversationId, isUserScrolling]);
+
+  // Detectar quando o usuário rola manualmente
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      
+      // Se o usuário está no final, desabilitar flag de scroll manual
+      if (isAtBottom) {
+        setIsUserScrolling(false);
+      } else {
+        setIsUserScrolling(true);
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const renderMessages = () => {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -125,10 +162,18 @@ export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={messagesContainerRef}>
         <div className="p-4 space-y-4">
-          {renderMessages()}
-          <div ref={messagesEndRef} />
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              Carregando mensagens...
+            </div>
+          ) : (
+            <>
+              {renderMessages()}
+              <div ref={messagesEndRef} />
+            </>
+          )}
         </div>
       </div>
 
