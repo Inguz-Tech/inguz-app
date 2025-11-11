@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tag, User } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
-import { useConversationContent, Message } from '@/hooks/useConversationContent';
+import { useConversationContent } from '@/hooks/useConversationContent';
 import { useContactDetails } from '@/hooks/useContactDetails';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,89 +14,42 @@ const Conversations = () => {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
 
-  const { 
-    data: messagesData, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
-  } = useConversationContent(selectedConversationId || '');
-  
+  const { data: messages } = useConversationContent(selectedConversationId || '');
   const { data: contactDetails } = useContactDetails(selectedContactId || '');
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-
-  // Flatten todas as mensagens das páginas
-  const allMessages: Message[] = messagesData?.pages.flatMap(page => page.messages) || [];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSelectConversation = (conversationId: string, contactId: string) => {
     setSelectedConversationId(conversationId);
     setSelectedContactId(contactId);
   };
 
-  // Auto-scroll para o final quando selecionar uma conversa ou receber novas mensagens
+  // Auto-scroll para o final quando selecionar uma conversa ou novas mensagens
   useEffect(() => {
-    if (scrollRef.current && isAtBottom && allMessages.length > 0) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [allMessages.length, isAtBottom]);
+  }, [messages, selectedConversationId]);
 
-  // Reset para bottom quando mudar de conversa
-  useEffect(() => {
-    setIsAtBottom(true);
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [selectedConversationId]);
-
-  // Detectar scroll para carregar mais mensagens
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    
-    // Detectar se está no topo para carregar mais mensagens antigas
-    if (scrollTop < 100 && hasNextPage && !isFetchingNextPage) {
-      const previousScrollHeight = scrollHeight;
-      fetchNextPage().then(() => {
-        // Manter a posição do scroll após carregar novas mensagens
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight - previousScrollHeight;
-        }
-      });
-    }
-
-    // Detectar se está no fundo
-    const atBottom = scrollHeight - scrollTop - clientHeight < 50;
-    setIsAtBottom(atBottom);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  // Renderizar marcador de data
-  const renderDateMarker = (date: string) => (
-    <div className="flex items-center justify-center my-4">
-      <div className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground">
-        {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-      </div>
-    </div>
-  );
-
-  // Agrupar mensagens por data e renderizar
+  // Renderizar mensagens com marcadores de data
   const renderMessages = () => {
-    if (!allMessages || allMessages.length === 0) {
+    if (!messages || messages.length === 0) {
       return <div className="text-center text-muted-foreground">Nenhuma mensagem</div>;
     }
 
     const elements: JSX.Element[] = [];
     let lastDate: Date | null = null;
 
-    allMessages.forEach((message, index) => {
+    messages.forEach((message) => {
       const messageDate = parseISO(message.timestamp);
       
       // Adicionar marcador de data se mudou o dia
       if (!lastDate || !isSameDay(lastDate, messageDate)) {
         elements.push(
-          <div key={`date-${message.id}`}>
-            {renderDateMarker(message.timestamp)}
+          <div key={`date-${message.id}`} className="flex items-center justify-center my-4">
+            <div className="bg-muted px-3 py-1 rounded-full text-xs text-muted-foreground">
+              {format(messageDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </div>
           </div>
         );
         lastDate = messageDate;
@@ -188,31 +140,11 @@ const Conversations = () => {
                 </div>
               </div>
 
-              {/* Área de Mensagens com Scroll Independente e Invertido */}
-              <div 
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex-1 overflow-y-auto"
-              >
+              {/* Área de Mensagens com Scroll Independente */}
+              <div className="flex-1 overflow-y-auto">
                 <div className="p-4 space-y-4">
-                  {/* Indicador de carregamento de mensagens antigas */}
-                  {isFetchingNextPage && (
-                    <div className="text-center text-sm text-muted-foreground py-2">
-                      Carregando mensagens antigas...
-                    </div>
-                  )}
-                  
-                  {/* Marcador de início do chat */}
-                  {!hasNextPage && allMessages.length > 0 && (
-                    <div className="flex items-center justify-center my-4">
-                      <div className="bg-muted px-4 py-2 rounded-full text-sm text-muted-foreground font-medium">
-                        Início da conversa
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Mensagens com marcadores de data */}
                   {renderMessages()}
+                  <div ref={messagesEndRef} />
                 </div>
               </div>
             </>
