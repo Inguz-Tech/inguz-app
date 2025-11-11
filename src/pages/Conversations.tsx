@@ -33,7 +33,7 @@ const Conversations = () => {
 
   // Renderizar mensagens com marcadores de data
   const renderMessages = () => {
-    if (!messages || messages.length === 0) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return <div className="text-center text-muted-foreground">Nenhuma mensagem</div>;
     }
 
