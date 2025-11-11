@@ -16,14 +16,13 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
   const [notes, setNotes] = useState('');
 
   const handleSaveNotes = () => {
-    // TODO: Implementar salvamento de notas
     console.log('Salvando notas:', notes);
   };
 
   if (!contactDetails) {
     return (
-      <div className="flex flex-col h-full border-l bg-background">
-        <div className="border-b p-4 flex-shrink-0">
+      <div className="h-full flex flex-col bg-background">
+        <div className="border-b p-4 bg-card">
           <h2 className="text-lg font-semibold">Detalhes do Contato</h2>
         </div>
         <div className="flex-1 flex items-center justify-center p-4">
@@ -36,9 +35,9 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full border-l bg-background">
-      {/* Header */}
-      <div className="border-b p-4 flex-shrink-0">
+    <div className="h-full flex flex-col bg-background">
+      {/* Header - Fixed */}
+      <div className="border-b p-4 bg-card">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-20 w-20 mb-3">
             <AvatarFallback className="text-2xl bg-primary/10 text-primary">
@@ -50,15 +49,15 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
         </div>
       </div>
 
-      {/* Tabs Content */}
+      {/* Tabs Content - Scrollable */}
       <div className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mx-4 my-2" style={{ width: 'calc(100% - 2rem)' }}>
+        <Tabs defaultValue="profile" className="w-full h-full">
+          <TabsList className="w-full grid grid-cols-2 rounded-none border-b">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="notes">Notas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="p-4 space-y-6">
+          <TabsContent value="profile" className="p-4 space-y-6 mt-0">
             {/* Contact Info */}
             <div className="space-y-3">
               <h4 className="font-semibold text-sm flex items-center gap-2">
@@ -118,7 +117,7 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
             )}
           </TabsContent>
 
-          <TabsContent value="notes" className="p-4 space-y-4">
+          <TabsContent value="notes" className="p-4 space-y-4 mt-0">
             <div>
               <h4 className="font-semibold text-sm mb-2">Anotações Internas</h4>
               <p className="text-xs text-muted-foreground mb-3">

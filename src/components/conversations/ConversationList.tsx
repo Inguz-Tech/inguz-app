@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Bot, Clock } from 'lucide-react';
+import { Search, Bot } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,9 +22,9 @@ export const ConversationList = ({ selectedConversationId, onSelectConversation 
   );
 
   return (
-    <div className="flex flex-col h-full border-r bg-background">
-      {/* Search Bar */}
-      <div className="p-4 border-b flex-shrink-0">
+    <div className="h-full flex flex-col bg-background">
+      {/* Search Bar - Fixed */}
+      <div className="p-4 border-b bg-card">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -37,46 +36,44 @@ export const ConversationList = ({ selectedConversationId, onSelectConversation 
         </div>
       </div>
 
-      {/* Conversations List */}
+      {/* Conversations List - Scrollable */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="p-4 text-center text-muted-foreground">Carregando...</div>
         ) : filteredConversations && filteredConversations.length > 0 ? (
-          filteredConversations.map((conv) => (
-            <Card
-              key={conv.id}
-              className={`m-2 cursor-pointer p-3 transition-colors border-l-4 ${
-                selectedConversationId === conv.id 
-                  ? 'bg-accent border-l-primary' 
-                  : 'border-l-transparent hover:bg-muted/50'
-              }`}
-              onClick={() => onSelectConversation(conv.id, conv.contact_id)}
-            >
-              <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12 flex-shrink-0">
-                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                    {conv.contact_name[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="font-semibold text-sm truncate">{conv.contact_name}</p>
-                    <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                      {format(new Date(conv.last_message_at), 'HH:mm', { locale: ptBR })}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-1">{conv.contact_phone}</p>
-                  <p className="text-xs text-muted-foreground truncate">{conv.last_message_preview}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="text-xs flex items-center gap-1">
+          <div className="divide-y">
+            {filteredConversations.map((conv) => (
+              <div
+                key={conv.id}
+                className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                  selectedConversationId === conv.id ? 'bg-accent' : ''
+                }`}
+                onClick={() => onSelectConversation(conv.id, conv.contact_id)}
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-12 w-12 flex-shrink-0">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {conv.contact_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-semibold text-sm truncate">{conv.contact_name}</p>
+                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                        {format(new Date(conv.last_message_at), 'HH:mm', { locale: ptBR })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">{conv.contact_phone}</p>
+                    <p className="text-xs text-muted-foreground truncate">{conv.last_message_preview}</p>
+                    <Badge variant="secondary" className="text-xs flex items-center gap-1 w-fit mt-2">
                       <Bot className="h-3 w-3" />
                       Agente de IA
                     </Badge>
                   </div>
                 </div>
               </div>
-            </Card>
-          ))
+            ))}
+          </div>
         ) : (
           <div className="p-4 text-center text-muted-foreground">
             {searchTerm ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa'}
