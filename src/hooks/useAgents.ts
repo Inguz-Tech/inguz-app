@@ -7,7 +7,7 @@ interface Agent {
   description: string | null;
   is_active: boolean;
   tenant_id: string;
-  created_at: string;
+  whatsapp_number: string;
 }
 
 export const useAgents = (tenantId: string | undefined) => {
@@ -21,8 +21,7 @@ export const useAgents = (tenantId: string | undefined) => {
       const { data, error } = await supabase
         .from('agents')
         .select('*')
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false });
+        .eq('tenant_id', tenantId);
 
       if (error) {
         console.error('Error fetching agents:', error);

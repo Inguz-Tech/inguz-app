@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Plus, Bot, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAgents } from '@/hooks/useAgents';
 import { useAgentStats } from '@/hooks/useAgentStats';
@@ -32,11 +33,17 @@ const Agents = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-primary/10 p-3">
-                        <Bot className="h-6 w-6 text-primary" />
-                      </div>
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-navy text-white text-lg">
+                          {agent.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
                         <CardTitle className="text-lg">{agent.name}</CardTitle>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                          <Phone className="h-3 w-3" />
+                          <span>{agent.whatsapp_number}</span>
+                        </div>
                         <Badge variant={agent.is_active ? 'default' : 'secondary'} className="mt-1">
                           {agent.is_active ? 'Ativo' : 'Inativo'}
                         </Badge>
