@@ -51,41 +51,59 @@ export const UserManagement = () => {
   const fetchUsers = async () => {
     if (!tenant?.id && role !== 'master_admin') return;
 
-    let query = supabase
+    // First, get profiles
+    let profileQuery = supabase
       .from('profiles')
-      .select(`
-        id,
-        full_name,
-        tenant_id,
-        user_roles (role)
-      `);
+      .select('id, full_name, tenant_id');
 
     if (role === 'admin') {
-      query = query.eq('tenant_id', tenant?.id);
+      profileQuery = profileQuery.eq('tenant_id', tenant?.id);
     }
 
-    const { data, error } = await query;
+    const { data: profiles, error: profileError } = await profileQuery;
 
-    if (error) {
+    if (profileError) {
       toast.error('Erro ao carregar usuários');
+      console.error('Error fetching profiles:', profileError);
       return;
     }
 
-    if (data) {
-      const formattedUsers = await Promise.all(
-        data.map(async (user: any) => {
-          const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
-          return {
-            id: user.id,
-            email: authUser?.user?.email || '',
-            full_name: user.full_name,
-            role: user.user_roles?.[0]?.role || 'viewer',
-            tenant_id: user.tenant_id,
-          };
-        })
-      );
-      setUsers(formattedUsers);
+    if (!profiles || profiles.length === 0) {
+      setUsers([]);
+      return;
     }
+
+    // Get user IDs
+    const userIds = profiles.map(p => p.id);
+
+    // Fetch roles for these users
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id, role')
+      .in('user_id', userIds);
+
+    if (rolesError) {
+      console.error('Error fetching roles:', rolesError);
+    }
+
+    // Create a map of user_id to role
+    const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
+
+    // Format users data
+    const formattedUsers = await Promise.all(
+      profiles.map(async (profile: any) => {
+        const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+        return {
+          id: profile.id,
+          email: authUser?.user?.email || '',
+          full_name: profile.full_name,
+          role: roleMap.get(profile.id) || 'viewer',
+          tenant_id: profile.tenant_id,
+        };
+      })
+    );
+    
+    setUsers(formattedUsers);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
