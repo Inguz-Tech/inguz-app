@@ -211,18 +211,22 @@ export const UserManagement = () => {
   };
 
   const handleDelete = async (userId: string, userName: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o usuário ${userName}?`)) {
+    if (!confirm(`Tem certeza que deseja desativar o usuário ${userName}? O usuário não poderá mais fazer login.`)) {
       return;
     }
 
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    // Soft delete: remove role to prevent login
+    const { error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
 
     if (error) {
-      toast.error(`Erro ao excluir usuário: ${error.message}`);
+      toast.error(`Erro ao desativar usuário: ${error.message}`);
       return;
     }
 
-    toast.success(`Usuário ${userName} excluído com sucesso!`);
+    toast.success(`Usuário ${userName} desativado com sucesso!`);
     fetchUsers();
   };
 
