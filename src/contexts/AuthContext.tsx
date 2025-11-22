@@ -9,7 +9,7 @@ interface Profile {
 }
 
 interface UserRole {
-  role: 'admin' | 'viewer';
+  role: 'master_admin' | 'admin' | 'viewer';
 }
 
 interface Tenant {
@@ -23,7 +23,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   tenant: Tenant | null;
-  role: 'admin' | 'viewer' | null;
+  role: 'master_admin' | 'admin' | 'viewer' | null;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
   signup: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [role, setRole] = useState<'admin' | 'viewer' | null>(null);
+  const [role, setRole] = useState<'master_admin' | 'admin' | 'viewer' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfileAndTenant = async (userId: string) => {
