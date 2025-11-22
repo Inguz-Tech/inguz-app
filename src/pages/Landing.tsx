@@ -1,8 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Boxes } from '@/components/ui/background-boxes';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Landing = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   return (
     <div className="min-h-screen">
       <div className="h-screen relative w-full overflow-hidden bg-slate-900 flex flex-col items-center justify-center">
@@ -16,7 +27,7 @@ const Landing = () => {
               <span className="text-primary">Agentes de I.A.</span> 🤖
             </h1>
             <div className="flex flex-wrap justify-center gap-4 mt-12">
-              <Link to="/signup">
+              <Link to="/dashboard">
                 <Button size="lg" className="text-lg">
                   Contratar Agora
                 </Button>
