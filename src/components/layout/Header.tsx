@@ -15,7 +15,7 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="text-2xl font-bold flex items-center">
+        <Link to={user ? "/dashboard" : "/"} className="text-2xl font-bold flex items-center">
           <svg 
             width="24" 
             height="24" 
@@ -56,14 +56,9 @@ export const Header = () => {
               </Button>
             </>
           ) : (
-            <>
-              <Link to="/login">
-                <Button variant="outline">Login</Button>
-              </Link>
-              <Link to="/signup">
-                <Button>Cadastre-se</Button>
-              </Link>
-            </>
+            <Link to="/login">
+              <Button variant="outline">Fazer Login</Button>
+            </Link>
           )}
         </nav>
       </div>
