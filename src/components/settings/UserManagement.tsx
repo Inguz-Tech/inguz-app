@@ -68,6 +68,8 @@ export const UserManagement = () => {
       return;
     }
 
+    console.log('Profiles fetched:', profiles);
+
     if (!profiles || profiles.length === 0) {
       setUsers([]);
       return;
@@ -86,23 +88,32 @@ export const UserManagement = () => {
       console.error('Error fetching roles:', rolesError);
     }
 
+    console.log('Roles fetched:', roles);
+
     // Create a map of user_id to role
     const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
 
+    // Try to fetch emails from auth.users using RPC
+    const { data: emailsData } = await supabase.rpc('get_user_emails', {
+      user_ids: userIds
+    });
+
+    console.log('Emails fetched:', emailsData);
+
+    const emailMap = new Map(emailsData?.map((e: any) => [e.id, e.email]) || []);
+
     // Format users data
-    const formattedUsers = await Promise.all(
-      profiles.map(async (profile: any) => {
-        const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
-        return {
-          id: profile.id,
-          email: authUser?.user?.email || '',
-          full_name: profile.full_name,
-          role: roleMap.get(profile.id) || 'viewer',
-          tenant_id: profile.tenant_id,
-        };
-      })
-    );
+    const formattedUsers = profiles.map((profile: any) => {
+      return {
+        id: profile.id,
+        email: (emailMap.get(profile.id) as string) || 'Email não disponível',
+        full_name: profile.full_name,
+        role: roleMap.get(profile.id) || 'viewer',
+        tenant_id: profile.tenant_id,
+      };
+    });
     
+    console.log('Formatted users:', formattedUsers);
     setUsers(formattedUsers);
   };
 
