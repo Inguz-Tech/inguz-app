@@ -124,14 +124,16 @@ export const UserManagement = () => {
       return;
     }
 
-    // Create auth user
+    // Create auth user - the profile will be created automatically by trigger
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: {
           full_name: formData.full_name,
+          tenant_id: targetTenantId,
         },
+        emailRedirectTo: `${window.location.origin}/`,
       },
     });
 
@@ -145,19 +147,8 @@ export const UserManagement = () => {
       return;
     }
 
-    // Create profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
-        full_name: formData.full_name,
-        tenant_id: targetTenantId,
-      });
-
-    if (profileError) {
-      toast.error(`Erro ao criar perfil: ${profileError.message}`);
-      return;
-    }
+    // Wait a moment for trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Create role
     const { error: roleError } = await supabase
