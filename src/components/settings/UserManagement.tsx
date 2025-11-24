@@ -194,11 +194,24 @@ export const UserManagement = () => {
       return;
     }
 
-    // Update role
+    // Delete existing role and insert new one
+    const { error: deleteError } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', editingUser.id);
+
+    if (deleteError) {
+      toast.error(`Erro ao remover papel anterior: ${deleteError.message}`);
+      return;
+    }
+
+    // Insert new role
     const { error: roleError } = await supabase
       .from('user_roles')
-      .update({ role: formData.role })
-      .eq('user_id', editingUser.id);
+      .insert({
+        user_id: editingUser.id,
+        role: formData.role,
+      });
 
     if (roleError) {
       toast.error(`Erro ao atualizar papel: ${roleError.message}`);
