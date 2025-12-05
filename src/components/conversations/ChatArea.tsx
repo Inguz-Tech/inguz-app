@@ -7,6 +7,7 @@ import { useContactDetails } from '@/hooks/useContactDetails';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info } from 'lucide-react';
+import { formatBrazilianPhone } from '@/lib/utils';
 
 interface ChatAreaProps {
   conversationId: string | null;
@@ -70,7 +71,7 @@ export const ChatArea = ({
             </Avatar>
             <div>
               <p className="font-semibold text-sm md:text-base">{contactDetails.name}</p>
-              <p className="text-xs text-muted-foreground">{contactDetails.phone}</p>
+              <p className="text-xs text-muted-foreground">{formatBrazilianPhone(contactDetails.phone)}</p>
             </div>
           </div>
           

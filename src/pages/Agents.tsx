@@ -6,6 +6,7 @@ import { Plus, Bot, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAgents } from '@/hooks/useAgents';
 import { useAgentStats } from '@/hooks/useAgentStats';
+import { formatBrazilianPhone } from '@/lib/utils';
 
 const Agents = () => {
   const { tenant } = useAuth();
@@ -42,7 +43,7 @@ const Agents = () => {
                         <CardTitle className="text-lg">{agent.name}</CardTitle>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                           <Phone className="h-3 w-3" />
-                          <span>{agent.whatsapp_number}</span>
+                          <span>{formatBrazilianPhone(agent.whatsapp_number)}</span>
                         </div>
                         <Badge variant={agent.is_active ? 'default' : 'secondary'} className="mt-1">
                           {agent.is_active ? 'Ativo' : 'Inativo'}
