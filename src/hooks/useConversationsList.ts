@@ -25,8 +25,7 @@ export const useConversationsList = (agentId?: string) => {
             phone
           ),
           messages (
-            content,
-            created_at
+            content
           )
         `)
         .order('last_message_at', { ascending: false })
@@ -44,12 +43,9 @@ export const useConversationsList = (agentId?: string) => {
       }
 
       return (data || []).map((conv: any) => {
-        // Sort messages by created_at descending to get the last message
+        // Get the last message from the array (assuming they're in order)
         const messages = conv.messages || [];
-        const sortedMessages = messages.sort((a: any, b: any) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        const lastMessage = sortedMessages[0];
+        const lastMessage = messages[messages.length - 1];
         
         return {
           id: conv.id,
