@@ -6,14 +6,23 @@ import { useConversationContent } from '@/hooks/useConversationContent';
 import { useContactDetails } from '@/hooks/useContactDetails';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft } from 'lucide-react';
+import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info } from 'lucide-react';
 
 interface ChatAreaProps {
   conversationId: string | null;
   contactId: string | null;
+  isMobile?: boolean;
+  onBack?: () => void;
+  onOpenDetails?: () => void;
 }
 
-export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
+export const ChatArea = ({ 
+  conversationId, 
+  contactId,
+  isMobile = false,
+  onBack,
+  onOpenDetails
+}: ChatAreaProps) => {
   const { data: messages, isLoading } = useConversationContent(conversationId || '');
   const { data: contactDetails } = useContactDetails(contactId || '');
   const [messageText, setMessageText] = useState('');
@@ -44,36 +53,55 @@ export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header - Fixed */}
-      <div className="border-b p-4 bg-card">
+      {/* Header */}
+      <div className="border-b p-3 md:p-4 bg-card">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Mobile: Back Button */}
+            {isMobile && onBack && (
+              <Button variant="ghost" size="icon" onClick={onBack} className="mr-1">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-primary/10 text-primary">
                 {contactDetails.name[0]}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold">{contactDetails.name}</p>
+              <p className="font-semibold text-sm md:text-base">{contactDetails.name}</p>
               <p className="text-xs text-muted-foreground">{contactDetails.phone}</p>
             </div>
           </div>
+          
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <ArrowRightLeft className="h-4 w-4 mr-2" />
-              Transferir
-            </Button>
-            <Button variant="destructive" size="sm">
-              <UserX className="h-4 w-4 mr-2" />
-              Finalizar
-            </Button>
+            {/* Mobile: Info Button */}
+            {isMobile && onOpenDetails && (
+              <Button variant="ghost" size="icon" onClick={onOpenDetails}>
+                <Info className="h-5 w-5" />
+              </Button>
+            )}
+            
+            {/* Desktop: Action Buttons */}
+            {!isMobile && (
+              <>
+                <Button variant="outline" size="sm">
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                  Transferir
+                </Button>
+                <Button variant="destructive" size="sm">
+                  <UserX className="h-4 w-4 mr-2" />
+                  Finalizar
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Messages Area - Scrollable */}
       <div className="flex-1 overflow-y-auto bg-muted/5">
-        <div className="p-4 space-y-3">
+        <div className="p-3 md:p-4 space-y-3">
           {isLoading ? (
             <div className="text-center text-muted-foreground py-8">Carregando mensagens...</div>
           ) : messages && messages.length > 0 ? (
@@ -102,14 +130,14 @@ export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
                       className={`flex ${message.sender_type === 'Agent' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg px-3 py-2 ${
+                        className={`max-w-[85%] md:max-w-[70%] rounded-lg px-3 py-2 ${
                           message.sender_type === 'Agent'
-                            ? 'bg-navy text-white'
-                            : 'bg-card border'
+                            ? 'bg-emerald-600 text-white rounded-br-sm'
+                            : 'bg-card border rounded-bl-sm'
                         }`}
                       >
                         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                        <span className="text-xs opacity-70 mt-1 block">
+                        <span className="text-xs opacity-70 mt-1 block text-right">
                           {format(messageDate, 'HH:mm')}
                         </span>
                       </div>
@@ -127,15 +155,19 @@ export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
         </div>
       </div>
 
-      {/* Input Area - Fixed */}
-      <div className="border-t p-4 bg-card">
+      {/* Input Area - Fixed at bottom */}
+      <div className="border-t p-3 md:p-4 bg-card">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Paperclip className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <ImageIcon className="h-5 w-5" />
-          </Button>
+          {!isMobile && (
+            <>
+              <Button variant="ghost" size="icon">
+                <Paperclip className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <ImageIcon className="h-5 w-5" />
+              </Button>
+            </>
+          )}
           <Input
             placeholder="Digite uma mensagem..."
             value={messageText}
@@ -152,6 +184,7 @@ export const ChatArea = ({ conversationId, contactId }: ChatAreaProps) => {
             size="icon"
             onClick={handleSend}
             disabled={!messageText.trim()}
+            className="bg-emerald-600 hover:bg-emerald-700"
           >
             <Send className="h-5 w-5" />
           </Button>

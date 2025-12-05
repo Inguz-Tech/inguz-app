@@ -5,13 +5,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useContactDetails } from '@/hooks/useContactDetails';
-import { Tag, User, Mail, Phone, Save } from 'lucide-react';
+import { Tag, User, Mail, Phone, Save, ArrowLeft, Edit } from 'lucide-react';
 
 interface ContactDetailsProps {
   contactId: string | null;
+  isMobile?: boolean;
+  onBack?: () => void;
 }
 
-export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
+export const ContactDetails = ({ 
+  contactId,
+  isMobile = false,
+  onBack
+}: ContactDetailsProps) => {
   const { data: contactDetails } = useContactDetails(contactId || '');
   const [notes, setNotes] = useState('');
 
@@ -22,9 +28,20 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
   if (!contactDetails) {
     return (
       <div className="h-full flex flex-col bg-background">
-        <div className="border-b p-4 bg-card">
-          <h2 className="text-lg font-semibold">Detalhes do Contato</h2>
-        </div>
+        {/* Mobile Header */}
+        {isMobile && onBack && (
+          <div className="border-b p-4 bg-card flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onBack}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-lg font-semibold">Informações</h2>
+          </div>
+        )}
+        {!isMobile && (
+          <div className="border-b p-4 bg-card">
+            <h2 className="text-lg font-semibold">Detalhes do Contato</h2>
+          </div>
+        )}
         <div className="flex-1 flex items-center justify-center p-4">
           <p className="text-center text-muted-foreground text-sm">
             Selecione uma conversa para ver os detalhes
@@ -36,15 +53,31 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header - Fixed */}
-      <div className="border-b p-4 bg-card">
+      {/* Mobile Header */}
+      {isMobile && onBack && (
+        <div className="border-b p-4 bg-card flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onBack}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-lg font-semibold">Informações</h2>
+          </div>
+          <Button variant="ghost" size="icon">
+            <Edit className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+
+      {/* Profile Header */}
+      <div className={`border-b p-4 md:p-6 bg-card ${isMobile ? '' : ''}`}>
         <div className="flex flex-col items-center text-center">
-          <Avatar className="h-20 w-20 mb-3">
-            <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+          <Avatar className="h-20 w-20 md:h-24 md:w-24 mb-3">
+            <AvatarFallback className="text-2xl md:text-3xl bg-primary/10 text-primary">
               {contactDetails.name[0]}
             </AvatarFallback>
           </Avatar>
           <h3 className="font-semibold text-lg">{contactDetails.name}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{contactDetails.phone}</p>
           <Badge className="mt-2" variant="secondary">{contactDetails.status}</Badge>
         </div>
       </div>
@@ -52,7 +85,7 @@ export const ContactDetails = ({ contactId }: ContactDetailsProps) => {
       {/* Tabs Content - Scrollable */}
       <div className="flex-1 overflow-y-auto">
         <Tabs defaultValue="profile" className="w-full h-full">
-          <TabsList className="w-full grid grid-cols-2 rounded-none border-b">
+          <TabsList className="w-full grid grid-cols-2 rounded-none border-b bg-card">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="notes">Notas</TabsTrigger>
           </TabsList>

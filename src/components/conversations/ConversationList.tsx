@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Bot } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Bot, MessageSquarePlus } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -10,9 +11,14 @@ import { ptBR } from 'date-fns/locale';
 interface ConversationListProps {
   selectedConversationId: string | null;
   onSelectConversation: (conversationId: string, contactId: string) => void;
+  isMobile?: boolean;
 }
 
-export const ConversationList = ({ selectedConversationId, onSelectConversation }: ConversationListProps) => {
+export const ConversationList = ({ 
+  selectedConversationId, 
+  onSelectConversation,
+  isMobile = false
+}: ConversationListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: conversations, isLoading } = useConversationsList();
 
@@ -23,7 +29,20 @@ export const ConversationList = ({ selectedConversationId, onSelectConversation 
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Search Bar - Fixed */}
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="p-4 border-b bg-card flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-burgundy font-bold text-lg">INGUZ</span>
+            <span className="text-navy font-bold text-lg">.TECH</span>
+          </div>
+          <Button variant="ghost" size="icon">
+            <MessageSquarePlus className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+
+      {/* Search Bar */}
       <div className="p-4 border-b bg-card">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -45,7 +64,7 @@ export const ConversationList = ({ selectedConversationId, onSelectConversation 
             {filteredConversations.map((conv) => (
               <div
                 key={conv.id}
-                className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 active:bg-muted ${
                   selectedConversationId === conv.id ? 'bg-muted' : ''
                 }`}
                 onClick={() => onSelectConversation(conv.id, conv.contact_id)}
@@ -63,12 +82,16 @@ export const ConversationList = ({ selectedConversationId, onSelectConversation 
                         {format(new Date(conv.last_message_at), 'HH:mm', { locale: ptBR })}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{conv.contact_phone}</p>
                     <p className="text-xs text-muted-foreground truncate">{conv.last_message_preview}</p>
-                    <Badge variant="secondary" className="text-xs flex items-center gap-1 w-fit mt-2">
-                      <Bot className="h-3 w-3" />
-                      Agente de IA
-                    </Badge>
+                    {!isMobile && (
+                      <>
+                        <p className="text-xs text-muted-foreground mb-1">{conv.contact_phone}</p>
+                        <Badge variant="secondary" className="text-xs flex items-center gap-1 w-fit mt-2">
+                          <Bot className="h-3 w-3" />
+                          Agente de IA
+                        </Badge>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
