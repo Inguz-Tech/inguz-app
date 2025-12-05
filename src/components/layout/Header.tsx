@@ -1,16 +1,60 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
+import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
 
 export const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
+    setIsOpen(false);
     await logout();
     navigate('/');
   };
+
+  const NavLinks = ({ onClose }: { onClose?: () => void }) => (
+    <>
+      <Link 
+        to="/dashboard" 
+        className="text-sm font-medium text-foreground hover:text-primary"
+        onClick={onClose}
+      >
+        Dashboard
+      </Link>
+      <Link 
+        to="/conversations" 
+        className="text-sm font-medium text-foreground hover:text-primary"
+        onClick={onClose}
+      >
+        Conversas
+      </Link>
+      <Link 
+        to="/agents" 
+        className="text-sm font-medium text-foreground hover:text-primary"
+        onClick={onClose}
+      >
+        Agentes
+      </Link>
+      <Link 
+        to="/settings" 
+        className="text-sm font-medium text-foreground hover:text-primary"
+        onClick={onClose}
+      >
+        Configurações
+      </Link>
+    </>
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card">
@@ -37,24 +81,37 @@ export const Header = () => {
 
         <nav className="flex items-center gap-6">
           {user ? (
-            <>
-              <Link to="/dashboard" className="text-sm font-medium text-foreground hover:text-primary">
-                Dashboard
-              </Link>
-              <Link to="/conversations" className="text-sm font-medium text-foreground hover:text-primary">
-                Conversas
-              </Link>
-              <Link to="/agents" className="text-sm font-medium text-foreground hover:text-primary">
-                Agentes
-              </Link>
-              <Link to="/settings" className="text-sm font-medium text-foreground hover:text-primary">
-                Configurações
-              </Link>
-              <Button onClick={handleLogout} variant="outline" size="sm">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </Button>
-            </>
+            isMobile ? (
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px] pt-12">
+                  <nav className="flex flex-col gap-4">
+                    <NavLinks onClose={() => setIsOpen(false)} />
+                    <Button 
+                      onClick={handleLogout} 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4 w-full justify-start"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sair
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <>
+                <NavLinks />
+                <Button onClick={handleLogout} variant="outline" size="sm">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sair
+                </Button>
+              </>
+            )
           ) : (
             <Link to="/login">
               <Button variant="outline">Fazer Login</Button>
