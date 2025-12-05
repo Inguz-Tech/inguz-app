@@ -25,7 +25,8 @@ export const useConversationsList = (agentId?: string) => {
             phone
           ),
           messages (
-            content
+            content,
+            created_at
           )
         `)
         .order('last_message_at', { ascending: false })
@@ -42,14 +43,23 @@ export const useConversationsList = (agentId?: string) => {
         return [];
       }
 
-      return (data || []).map((conv: any) => ({
-        id: conv.id,
-        contact_id: conv.contact_id,
-        contact_name: conv.contacts?.name || 'Sem nome',
-        contact_phone: conv.contacts?.phone || '',
-        last_message_at: conv.last_message_at,
-        last_message_preview: conv.messages?.[0]?.content || '',
-      }));
+      return (data || []).map((conv: any) => {
+        // Sort messages by created_at descending to get the last message
+        const messages = conv.messages || [];
+        const sortedMessages = messages.sort((a: any, b: any) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        const lastMessage = sortedMessages[0];
+        
+        return {
+          id: conv.id,
+          contact_id: conv.contact_id,
+          contact_name: conv.contacts?.name || 'Sem nome',
+          contact_phone: conv.contacts?.phone || '',
+          last_message_at: conv.last_message_at,
+          last_message_preview: lastMessage?.content || '',
+        };
+      });
     },
   });
 };
