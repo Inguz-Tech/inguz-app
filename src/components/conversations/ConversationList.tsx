@@ -7,7 +7,7 @@ import { Search, Bot, MessageSquarePlus } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatBrazilianPhone } from '@/lib/utils';
+import { formatBrazilianPhone, stripWhatsAppFormatting } from '@/lib/utils';
 
 interface ConversationListProps {
   selectedConversationId: string | null;
@@ -83,7 +83,7 @@ export const ConversationList = ({
                         {format(new Date(conv.last_message_at), 'HH:mm', { locale: ptBR })}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{conv.last_message_preview}</p>
+                    <p className="text-xs text-muted-foreground truncate">{stripWhatsAppFormatting(conv.last_message_preview || '')}</p>
                     {!isMobile && (
                       <>
                         <p className="text-xs text-muted-foreground mb-1">{formatBrazilianPhone(conv.contact_phone)}</p>

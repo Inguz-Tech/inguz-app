@@ -32,3 +32,16 @@ export function formatBrazilianPhone(phone: string): string {
 export function getPhoneDigits(phone: string): string {
   return phone.replace(/@.*$/, '').replace(/\D/g, '');
 }
+
+// Strip WhatsApp formatting characters for preview text
+export function stripWhatsAppFormatting(text: string): string {
+  return text
+    .replace(/\*([^\*]+)\*/g, '$1')  // Bold
+    .replace(/_([^_]+)_/g, '$1')      // Italic
+    .replace(/~([^~]+)~/g, '$1')      // Strikethrough
+    .replace(/```([^`]+)```/g, '$1')  // Code block
+    .replace(/`([^`]+)`/g, '$1')      // Inline code
+    .replace(/^>\s?/gm, '')           // Quote
+    .replace(/^[\*\-]\s/gm, '')       // Bullet list
+    .replace(/^\d+\.\s/gm, '');       // Numbered list
+}
