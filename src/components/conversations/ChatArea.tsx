@@ -8,6 +8,7 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info } from 'lucide-react';
 import { formatBrazilianPhone } from '@/lib/utils';
+import { WhatsAppFormattedText } from './WhatsAppFormattedText';
 
 interface ChatAreaProps {
   conversationId: string | null;
@@ -137,7 +138,7 @@ export const ChatArea = ({
                             : 'bg-card border rounded-bl-sm'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                        <WhatsAppFormattedText text={message.content} className="text-sm break-words" />
                         <span className="text-xs opacity-70 mt-1 block text-right">
                           {format(messageDate, 'HH:mm')}
                         </span>
