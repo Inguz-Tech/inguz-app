@@ -27,3 +27,8 @@ export function formatBrazilianPhone(phone: string): string {
   // Return original if not matching expected format
   return phone.replace(/@.*$/, '');
 }
+
+// Extract only digits from phone number for wa.me links
+export function getPhoneDigits(phone: string): string {
+  return phone.replace(/@.*$/, '').replace(/\D/g, '');
+}
