@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useContactDetails } from '@/hooks/useContactDetails';
 import { Tag, User, Mail, Phone, Save, ArrowLeft, Edit } from 'lucide-react';
+import { formatBrazilianPhone } from '@/lib/utils';
 
 interface ContactDetailsProps {
   contactId: string | null;
@@ -77,7 +78,7 @@ export const ContactDetails = ({
             </AvatarFallback>
           </Avatar>
           <h3 className="font-semibold text-lg">{contactDetails.name}</h3>
-          <p className="text-sm text-muted-foreground mt-1">{contactDetails.phone}</p>
+          <p className="text-sm text-muted-foreground mt-1">{formatBrazilianPhone(contactDetails.phone)}</p>
           <Badge className="mt-2" variant="secondary">{contactDetails.status}</Badge>
         </div>
       </div>
@@ -103,7 +104,7 @@ export const ContactDetails = ({
                     <Phone className="h-3 w-3" />
                     <span>Telefone</span>
                   </div>
-                  <p className="text-sm font-medium">{contactDetails.phone}</p>
+                  <p className="text-sm font-medium">{formatBrazilianPhone(contactDetails.phone)}</p>
                 </div>
                 {contactDetails.variables?.email && (
                   <div className="rounded-lg bg-muted p-3">
