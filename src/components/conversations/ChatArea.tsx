@@ -132,7 +132,7 @@ export const ChatArea = ({
                       <div
                         className={`max-w-[85%] md:max-w-[70%] rounded-lg px-3 py-2 ${
                           message.sender_type === 'Agent'
-                            ? 'bg-emerald-600 text-white rounded-br-sm'
+                            ? 'bg-navy text-white rounded-br-sm'
                             : 'bg-card border rounded-bl-sm'
                         }`}
                       >
@@ -184,7 +184,6 @@ export const ChatArea = ({
             size="icon"
             onClick={handleSend}
             disabled={!messageText.trim()}
-            className="bg-emerald-600 hover:bg-emerald-700"
           >
             <Send className="h-5 w-5" />
           </Button>
