@@ -9,7 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info } from 'lucide-react';
 import { formatBrazilianPhone } from '@/lib/utils';
 import { WhatsAppFormattedText } from './WhatsAppFormattedText';
-
+import { useToast } from '@/hooks/use-toast';
 interface ChatAreaProps {
   conversationId: string | null;
   contactId: string | null;
@@ -29,6 +29,7 @@ export const ChatArea = ({
   const { data: contactDetails } = useContactDetails(contactId || '');
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   // Auto scroll to bottom on new messages
   useEffect(() => {
@@ -37,10 +38,11 @@ export const ChatArea = ({
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (!messageText.trim()) return;
-    console.log('Enviando mensagem:', messageText);
-    setMessageText('');
+  const showUnavailable = () => {
+    toast({
+      title: "Função indisponível",
+      variant: "destructive",
+    });
   };
 
   if (!contactDetails) {
@@ -87,11 +89,11 @@ export const ChatArea = ({
             {/* Desktop: Action Buttons */}
             {!isMobile && (
               <>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
                   <ArrowRightLeft className="h-4 w-4 mr-2" />
                   Transferir
                 </Button>
-                <Button variant="destructive" size="sm">
+                <Button variant="destructive" size="sm" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
                   <UserX className="h-4 w-4 mr-2" />
                   Finalizar
                 </Button>
@@ -162,10 +164,10 @@ export const ChatArea = ({
         <div className="flex items-center gap-2">
           {!isMobile && (
             <>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
                 <Paperclip className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
                 <ImageIcon className="h-5 w-5" />
               </Button>
             </>
@@ -174,18 +176,13 @@ export const ChatArea = ({
             placeholder="Digite uma mensagem..."
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            className="flex-1"
+            className="flex-1 opacity-50 cursor-not-allowed"
+            disabled
           />
           <Button 
             size="icon"
-            onClick={handleSend}
-            disabled={!messageText.trim()}
+            className="opacity-50 cursor-not-allowed"
+            onClick={showUnavailable}
           >
             <Send className="h-5 w-5" />
           </Button>
