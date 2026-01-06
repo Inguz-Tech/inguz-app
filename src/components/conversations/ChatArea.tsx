@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConversationContent } from '@/hooks/useConversationContent';
 import { useContactDetails } from '@/hooks/useContactDetails';
 import { format, isSameDay, parseISO } from 'date-fns';
@@ -9,7 +10,6 @@ import { ptBR } from 'date-fns/locale';
 import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info } from 'lucide-react';
 import { formatBrazilianPhone } from '@/lib/utils';
 import { WhatsAppFormattedText } from './WhatsAppFormattedText';
-import { useToast } from '@/hooks/use-toast';
 interface ChatAreaProps {
   conversationId: string | null;
   contactId: string | null;
@@ -29,7 +29,6 @@ export const ChatArea = ({
   const { data: contactDetails } = useContactDetails(contactId || '');
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   // Auto scroll to bottom on new messages
   useEffect(() => {
@@ -37,13 +36,6 @@ export const ChatArea = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-
-  const showUnavailable = () => {
-    toast({
-      title: "Função indisponível",
-      variant: "destructive",
-    });
-  };
 
   if (!contactDetails) {
     return (
@@ -88,16 +80,30 @@ export const ChatArea = ({
             
             {/* Desktop: Action Buttons */}
             {!isMobile && (
-              <>
-                <Button variant="outline" size="sm" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
-                  <ArrowRightLeft className="h-4 w-4 mr-2" />
-                  Transferir
-                </Button>
-                <Button variant="destructive" size="sm" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
-                  <UserX className="h-4 w-4 mr-2" />
-                  Finalizar
-                </Button>
-              </>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="opacity-50 cursor-not-allowed">
+                      <ArrowRightLeft className="h-4 w-4 mr-2" />
+                      Transferir
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-muted text-muted-foreground">
+                    <p>Função indisponível</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="destructive" size="sm" className="opacity-50 cursor-not-allowed">
+                      <UserX className="h-4 w-4 mr-2" />
+                      Finalizar
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-muted text-muted-foreground">
+                    <p>Função indisponível</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>
@@ -163,14 +169,28 @@ export const ChatArea = ({
       <div className="border-t p-3 md:p-4 bg-card">
         <div className="flex items-center gap-2">
           {!isMobile && (
-            <>
-              <Button variant="ghost" size="icon" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
-                <Paperclip className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="opacity-50 cursor-not-allowed" onClick={showUnavailable}>
-                <ImageIcon className="h-5 w-5" />
-              </Button>
-            </>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="opacity-50 cursor-not-allowed">
+                    <Paperclip className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-muted text-muted-foreground">
+                  <p>Função indisponível</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="opacity-50 cursor-not-allowed">
+                    <ImageIcon className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-muted text-muted-foreground">
+                  <p>Função indisponível</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           <Input
             placeholder="Digite uma mensagem..."
@@ -179,13 +199,21 @@ export const ChatArea = ({
             className="flex-1 opacity-50 cursor-not-allowed"
             disabled
           />
-          <Button 
-            size="icon"
-            className="opacity-50 cursor-not-allowed"
-            onClick={showUnavailable}
-          >
-            <Send className="h-5 w-5" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="icon"
+                  className="opacity-50 cursor-not-allowed"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-muted text-muted-foreground">
+                <p>Função indisponível</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </div>
