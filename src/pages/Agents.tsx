@@ -53,9 +53,6 @@ const Agents = () => {
                           <Phone className="h-3 w-3" />
                           <span>{formatBrazilianPhone(agent.whatsapp_number)}</span>
                         </div>
-                        <Badge variant={agent.is_active ? 'default' : 'secondary'} className="mt-1">
-                          {agent.is_active ? 'Ativo' : 'Inativo'}
-                        </Badge>
                       </div>
                     </div>
                   </div>

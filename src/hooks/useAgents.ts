@@ -5,7 +5,6 @@ interface Agent {
   id: string;
   name: string;
   description: string | null;
-  is_active: boolean;
   tenant_id: string;
   whatsapp_number: string;
 }
@@ -20,7 +19,7 @@ export const useAgents = (tenantId: string | undefined) => {
 
       const { data, error } = await supabase
         .from('agents')
-        .select('id, name, description, is_active, tenant_id, whatsapp_number')
+        .select('id, name, description, tenant_id, whatsapp_number')
         .eq('tenant_id', tenantId);
 
       if (error) {
