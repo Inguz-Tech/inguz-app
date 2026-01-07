@@ -80,15 +80,46 @@ describe('loginSchema', () => {
 
 describe('signupSchema', () => {
   const validSignup = {
+    companyName: 'My Company',
     name: 'John Doe',
     email: 'john@example.com',
-    password: 'password123',
-    confirmPassword: 'password123',
+    password: 'Password123',
+    confirmPassword: 'Password123',
   };
 
   it('should validate a correct signup', () => {
     const result = signupSchema.safeParse(validSignup);
     expect(result.success).toBe(true);
+  });
+
+  it('should reject empty companyName', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      companyName: '',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Nome da empresa é obrigatório');
+    }
+  });
+
+  it('should reject companyName shorter than 2 characters', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      companyName: 'A',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Nome da empresa deve ter no mínimo 2 caracteres');
+    }
+  });
+
+  it('should reject companyName exceeding max length', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      companyName: 'a'.repeat(101),
+    });
+    expect(result.success).toBe(false);
   });
 
   it('should reject name shorter than 2 characters', () => {
@@ -110,10 +141,46 @@ describe('signupSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('should reject password without uppercase letter', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Senha deve conter pelo menos uma letra maiúscula');
+    }
+  });
+
+  it('should reject password without number', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      password: 'Password',
+      confirmPassword: 'Password',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Senha deve conter pelo menos um número');
+    }
+  });
+
+  it('should reject password shorter than 8 characters', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      password: 'Pass1',
+      confirmPassword: 'Pass1',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Senha deve ter no mínimo 8 caracteres');
+    }
+  });
+
   it('should reject mismatched passwords', () => {
     const result = signupSchema.safeParse({
       ...validSignup,
-      confirmPassword: 'differentpassword',
+      confirmPassword: 'DifferentPassword123',
     });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -121,17 +188,28 @@ describe('signupSchema', () => {
     }
   });
 
-  it('should trim name and email', () => {
+  it('should trim companyName, name and email', () => {
     const result = signupSchema.safeParse({
       ...validSignup,
+      companyName: '  My Company  ',
       name: '  John Doe  ',
       email: '  john@example.com  ',
     });
     expect(result.success).toBe(true);
     if (result.success) {
+      expect(result.data.companyName).toBe('My Company');
       expect(result.data.name).toBe('John Doe');
       expect(result.data.email).toBe('john@example.com');
     }
+  });
+
+  it('should accept valid password with uppercase and number', () => {
+    const result = signupSchema.safeParse({
+      ...validSignup,
+      password: 'ValidPass1',
+      confirmPassword: 'ValidPass1',
+    });
+    expect(result.success).toBe(true);
   });
 });
 
