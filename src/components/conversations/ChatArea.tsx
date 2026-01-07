@@ -3,11 +3,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useConversationContent } from '@/hooks/useConversationContent';
 import { useContactDetails } from '@/hooks/useContactDetails';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info } from 'lucide-react';
+import { Send, Paperclip, Image as ImageIcon, UserX, ArrowRightLeft, ArrowLeft, Info, MessageSquare } from 'lucide-react';
 import { formatBrazilianPhone } from '@/lib/utils';
 import { WhatsAppFormattedText } from './WhatsAppFormattedText';
 interface ChatAreaProps {
@@ -25,8 +28,8 @@ export const ChatArea = ({
   onBack,
   onOpenDetails
 }: ChatAreaProps) => {
-  const { data: messages, isLoading } = useConversationContent(conversationId || '');
-  const { data: contactDetails } = useContactDetails(contactId || '');
+  const { data: messages, isLoading, isError, refetch } = useConversationContent(conversationId || '');
+  const { data: contactDetails, isLoading: contactLoading } = useContactDetails(contactId || '');
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,12 +40,22 @@ export const ChatArea = ({
     }
   }, [messages]);
 
+  if (contactLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-muted/10">
+        <LoadingState message="Carregando conversa..." />
+      </div>
+    );
+  }
+
   if (!contactDetails) {
     return (
       <div className="h-full flex items-center justify-center bg-muted/10">
-        <div className="text-center text-muted-foreground">
-          <p className="text-lg">Selecione uma conversa para começar</p>
-        </div>
+        <EmptyState
+          title="Selecione uma conversa"
+          message="Escolha uma conversa na lista para começar"
+          icon={<MessageSquare className="h-6 w-6 text-muted-foreground" />}
+        />
       </div>
     );
   }
@@ -113,7 +126,13 @@ export const ChatArea = ({
       <div className="flex-1 overflow-y-auto bg-muted/5">
         <div className="p-3 md:p-4 space-y-3">
           {isLoading ? (
-            <div className="text-center text-muted-foreground py-8">Carregando mensagens...</div>
+            <LoadingState message="Carregando mensagens..." size="sm" />
+          ) : isError ? (
+            <ErrorState 
+              title="Erro ao carregar mensagens"
+              message="Não foi possível carregar as mensagens."
+              onRetry={() => refetch()}
+            />
           ) : messages && messages.length > 0 ? (
             <>
               {(() => {
@@ -160,7 +179,11 @@ export const ChatArea = ({
               <div ref={messagesEndRef} />
             </>
           ) : (
-            <div className="text-center text-muted-foreground py-8">Nenhuma mensagem</div>
+            <EmptyState
+              title="Nenhuma mensagem"
+              message="As mensagens aparecerão aqui"
+              icon={<MessageSquare className="h-6 w-6 text-muted-foreground" />}
+            />
           )}
         </div>
       </div>

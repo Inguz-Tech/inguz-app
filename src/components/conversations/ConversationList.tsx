@@ -3,7 +3,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Bot, MessageSquarePlus } from 'lucide-react';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Search, Bot, MessageSquarePlus, MessageSquare } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,7 +25,7 @@ export const ConversationList = ({
   isMobile = false
 }: ConversationListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: conversations, isLoading } = useConversationsList();
+  const { data: conversations, isLoading, isError, refetch } = useConversationsList();
 
   const filteredConversations = conversations?.filter(conv => 
     conv.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,7 +63,13 @@ export const ConversationList = ({
       {/* Conversations List - Scrollable */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="p-4 text-center text-muted-foreground">Carregando...</div>
+          <LoadingState message="Carregando conversas..." size="sm" />
+        ) : isError ? (
+          <ErrorState 
+            title="Erro ao carregar"
+            message="Não foi possível carregar as conversas."
+            onRetry={() => refetch()}
+          />
         ) : filteredConversations && filteredConversations.length > 0 ? (
           <div className="divide-y">
             {filteredConversations.map((conv) => (
@@ -103,9 +112,11 @@ export const ConversationList = ({
             ))}
           </div>
         ) : (
-          <div className="p-4 text-center text-muted-foreground">
-            {searchTerm ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa'}
-          </div>
+          <EmptyState
+            title={searchTerm ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa'}
+            message={searchTerm ? 'Tente buscar por outro termo' : 'As conversas aparecerão aqui'}
+            icon={<MessageSquare className="h-6 w-6 text-muted-foreground" />}
+          />
         )}
       </div>
     </div>

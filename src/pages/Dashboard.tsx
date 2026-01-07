@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { MessageSquare, Send, Inbox, Calendar as CalendarIcon } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,12 +24,12 @@ const Dashboard = () => {
     to: new Date(),
   });
 
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(
+  const { data: metrics, isLoading: metricsLoading, isError: metricsError, refetch: refetchMetrics } = useDashboardMetrics(
     tenant?.id, 
     dateRange.from || subDays(new Date(), 7), 
     dateRange.to || new Date()
   );
-  const { data: graphData, isLoading: graphLoading } = useGraphData(
+  const { data: graphData, isLoading: graphLoading, isError: graphError, refetch: refetchGraph } = useGraphData(
     tenant?.id, 
     dateRange.from || subDays(new Date(), 7), 
     dateRange.to || new Date()
@@ -116,7 +118,14 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             {graphLoading ? (
-              <div className="flex h-[300px] items-center justify-center">Carregando...</div>
+              <LoadingState message="Carregando gráfico..." className="h-[300px]" />
+            ) : graphError ? (
+              <ErrorState 
+                title="Erro ao carregar gráfico"
+                message="Não foi possível carregar os dados do gráfico."
+                onRetry={() => refetchGraph()}
+                className="h-[300px]"
+              />
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={graphData}>
