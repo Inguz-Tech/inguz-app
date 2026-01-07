@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -18,6 +20,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  createUserSchema,
+  updateUserSchema,
+  type CreateUserFormData,
+  type UpdateUserFormData,
+} from '@/lib/validations';
 
 interface User {
   id: string;
@@ -33,14 +41,28 @@ export const UserManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [filterRole, setFilterRole] = useState<string>('all');
-  const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
-    password: '',
-    role: 'viewer' as 'admin' | 'viewer',
-  });
 
   const canManageUsers = role === 'master_admin' || role === 'admin';
+
+  const createForm = useForm<CreateUserFormData>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      full_name: '',
+      email: '',
+      password: '',
+      role: 'viewer',
+    },
+  });
+
+  const updateForm = useForm<UpdateUserFormData>({
+    resolver: zodResolver(updateUserSchema),
+    defaultValues: {
+      full_name: '',
+      role: 'viewer',
+    },
+  });
+
+  const activeForm = editingUser ? updateForm : createForm;
 
   useEffect(() => {
     if (canManageUsers) {
@@ -51,7 +73,6 @@ export const UserManagement = () => {
   const fetchUsers = async () => {
     if (!tenant?.id && role !== 'master_admin') return;
 
-    // First, get profiles
     let profileQuery = supabase
       .from('profiles')
       .select('id, full_name, tenant_id');
@@ -64,70 +85,43 @@ export const UserManagement = () => {
 
     if (profileError) {
       toast.error('Erro ao carregar usuários');
-      console.error('Error fetching profiles:', profileError);
       return;
     }
-
-    console.log('Profiles fetched:', profiles);
 
     if (!profiles || profiles.length === 0) {
       setUsers([]);
       return;
     }
 
-    // Get user IDs
-    const userIds = profiles.map(p => p.id);
+    const userIds = profiles.map((p) => p.id);
 
-    // Fetch roles for these users
-    const { data: roles, error: rolesError } = await supabase
+    const { data: roles } = await supabase
       .from('user_roles')
       .select('user_id, role')
       .in('user_id', userIds);
 
-    if (rolesError) {
-      console.error('Error fetching roles:', rolesError);
-    }
+    const roleMap = new Map(roles?.map((r) => [r.user_id, r.role]) || []);
 
-    console.log('Roles fetched:', roles);
-
-    // Create a map of user_id to role
-    const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
-
-    // Try to fetch emails from auth.users using RPC
     const { data: emailsData } = await supabase.rpc('get_user_emails', {
-      user_ids: userIds
+      user_ids: userIds,
     });
 
-    console.log('Emails fetched:', emailsData);
+    const emailMap = new Map(
+      emailsData?.map((e: { id: string; email: string }) => [e.id, e.email]) || []
+    );
 
-    const emailMap = new Map(emailsData?.map((e: any) => [e.id, e.email]) || []);
+    const formattedUsers = profiles.map((userProfile) => ({
+      id: userProfile.id,
+      email: (emailMap.get(userProfile.id) as string) || 'Email não disponível',
+      full_name: userProfile.full_name,
+      role: roleMap.get(userProfile.id) || 'viewer',
+      tenant_id: userProfile.tenant_id,
+    }));
 
-    // Format users data
-    const formattedUsers = profiles.map((profile: any) => {
-      return {
-        id: profile.id,
-        email: (emailMap.get(profile.id) as string) || 'Email não disponível',
-        full_name: profile.full_name,
-        role: roleMap.get(profile.id) || 'viewer',
-        tenant_id: profile.tenant_id,
-      };
-    });
-    
-    console.log('Formatted users:', formattedUsers);
     setUsers(formattedUsers);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingUser) {
-      await handleUpdate();
-    } else {
-      await handleCreate();
-    }
-  };
-
-  const handleCreate = async () => {
+  const handleCreate = async (data: CreateUserFormData) => {
     const targetTenantId = role === 'master_admin' && tenant?.id ? tenant.id : profile?.tenant_id;
 
     if (!targetTenantId) {
@@ -135,13 +129,12 @@ export const UserManagement = () => {
       return;
     }
 
-    // Create auth user - the profile will be created automatically by trigger
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
+      email: data.email.trim(),
+      password: data.password,
       options: {
         data: {
-          full_name: formData.full_name,
+          full_name: data.full_name.trim(),
           tenant_id: targetTenantId,
         },
         emailRedirectTo: `${window.location.origin}/`,
@@ -158,35 +151,30 @@ export const UserManagement = () => {
       return;
     }
 
-    // Wait a moment for trigger to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Create role
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: authData.user.id,
-        role: formData.role,
-      });
+    const { error: roleError } = await supabase.from('user_roles').insert({
+      user_id: authData.user.id,
+      role: data.role,
+    });
 
     if (roleError) {
       toast.error(`Erro ao atribuir papel: ${roleError.message}`);
       return;
     }
 
-    toast.success(`Usuário ${formData.full_name} criado com sucesso!`);
+    toast.success(`Usuário ${data.full_name} criado com sucesso!`);
     setIsDialogOpen(false);
-    resetForm();
+    createForm.reset();
     fetchUsers();
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (data: UpdateUserFormData) => {
     if (!editingUser) return;
 
-    // Update profile
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ full_name: formData.full_name })
+      .update({ full_name: data.full_name.trim() })
       .eq('id', editingUser.id);
 
     if (profileError) {
@@ -194,7 +182,6 @@ export const UserManagement = () => {
       return;
     }
 
-    // Delete existing role and insert new one
     const { error: deleteError } = await supabase
       .from('user_roles')
       .delete()
@@ -205,36 +192,41 @@ export const UserManagement = () => {
       return;
     }
 
-    // Insert new role
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: editingUser.id,
-        role: formData.role,
-      });
+    const { error: roleError } = await supabase.from('user_roles').insert({
+      user_id: editingUser.id,
+      role: data.role,
+    });
 
     if (roleError) {
       toast.error(`Erro ao atualizar papel: ${roleError.message}`);
       return;
     }
 
-    toast.success(`Usuário ${formData.full_name} atualizado com sucesso!`);
+    toast.success(`Usuário ${data.full_name} atualizado com sucesso!`);
     setIsDialogOpen(false);
     setEditingUser(null);
-    resetForm();
+    updateForm.reset();
     fetchUsers();
   };
 
+  const onSubmit = (data: CreateUserFormData | UpdateUserFormData) => {
+    if (editingUser) {
+      handleUpdate(data as UpdateUserFormData);
+    } else {
+      handleCreate(data as CreateUserFormData);
+    }
+  };
+
   const handleDelete = async (userId: string, userName: string) => {
-    if (!confirm(`Tem certeza que deseja desativar o usuário ${userName}? O usuário não poderá mais fazer login.`)) {
+    if (
+      !confirm(
+        `Tem certeza que deseja desativar o usuário ${userName}? O usuário não poderá mais fazer login.`
+      )
+    ) {
       return;
     }
 
-    // Soft delete: remove role to prevent login
-    const { error } = await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId);
+    const { error } = await supabase.from('user_roles').delete().eq('user_id', userId);
 
     if (error) {
       toast.error(`Erro ao desativar usuário: ${error.message}`);
@@ -247,23 +239,17 @@ export const UserManagement = () => {
 
   const openEditDialog = (user: User) => {
     setEditingUser(user);
-    setFormData({
+    updateForm.reset({
       full_name: user.full_name,
-      email: user.email,
-      password: '',
       role: user.role === 'master_admin' ? 'admin' : user.role,
     });
     setIsDialogOpen(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      full_name: '',
-      email: '',
-      password: '',
-      role: 'viewer',
-    });
+  const openCreateDialog = () => {
     setEditingUser(null);
+    createForm.reset();
+    setIsDialogOpen(true);
   };
 
   const getRoleBadge = (userRole: string) => {
@@ -273,12 +259,11 @@ export const UserManagement = () => {
       viewer: { label: 'Visualizador', variant: 'secondary' as const },
     };
     const roleInfo = roleMap[userRole as keyof typeof roleMap];
-    return <Badge variant={roleInfo.variant}>{roleInfo.label}</Badge>;
+    return <Badge variant={roleInfo?.variant || 'secondary'}>{roleInfo?.label || userRole}</Badge>;
   };
 
-  const filteredUsers = filterRole === 'all' 
-    ? users 
-    : users.filter(u => u.role === filterRole);
+  const filteredUsers =
+    filterRole === 'all' ? users : users.filter((u) => u.role === filterRole);
 
   if (!canManageUsers) {
     return (
@@ -305,7 +290,7 @@ export const UserManagement = () => {
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm}>
+                <Button onClick={openCreateDialog}>
                   <Plus className="mr-2 h-4 w-4" />
                   Novo Usuário
                 </Button>
@@ -319,72 +304,98 @@ export const UserManagement = () => {
                     Preencha os dados do usuário. Os campos marcados são obrigatórios.
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="full_name">Nome Completo *</Label>
-                    <Input
-                      id="full_name"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      required
+                <Form {...activeForm}>
+                  <form onSubmit={activeForm.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={activeForm.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome Completo *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      disabled={!!editingUser}
-                      required
+
+                    {!editingUser && (
+                      <>
+                        <FormField
+                          control={createForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email *</FormLabel>
+                              <FormControl>
+                                <Input type="email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Senha Inicial *</FormLabel>
+                              <FormControl>
+                                <Input type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+
+                    <FormField
+                      control={activeForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Papel (Role) *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin do Tenant</SelectItem>
+                              <SelectItem value="viewer">Visualizador</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  {!editingUser && (
-                    <div>
-                      <Label htmlFor="password">Senha Inicial *</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                      />
+
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDialogOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={activeForm.formState.isSubmitting}>
+                        {editingUser ? 'Atualizar' : 'Criar'}
+                      </Button>
                     </div>
-                  )}
-                  <div>
-                    <Label htmlFor="role">Papel (Role) *</Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value) => setFormData({ ...formData, role: value as 'admin' | 'viewer' })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin do Tenant</SelectItem>
-                        <SelectItem value="viewer">Visualizador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit">
-                      {editingUser ? 'Atualizar' : 'Criar'}
-                    </Button>
-                  </div>
-                </form>
+                  </form>
+                </Form>
               </DialogContent>
             </Dialog>
           </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
-            <Label>Filtrar por Papel</Label>
+            <label className="text-sm font-medium">Filtrar por Papel</label>
             <Select value={filterRole} onValueChange={setFilterRole}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[200px] mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

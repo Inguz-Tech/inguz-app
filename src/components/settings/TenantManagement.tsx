@@ -1,34 +1,35 @@
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
+import { tenantSchema, type TenantFormData } from '@/lib/validations';
 
 export const TenantManagement = () => {
   const { role } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    tenant_name: '',
-    admin_name: '',
-    admin_email: '',
-    admin_password: '',
-  });
-
   const isMasterAdmin = role === 'master_admin';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const form = useForm<TenantFormData>({
+    resolver: zodResolver(tenantSchema),
+    defaultValues: {
+      tenant_name: '',
+      admin_name: '',
+      admin_email: '',
+      admin_password: '',
+    },
+  });
 
+  const onSubmit = async (data: TenantFormData) => {
     try {
       // Step 1: Create Tenant
       const { data: tenantData, error: tenantError } = await supabase
         .from('tenants')
         .insert({
-          name: formData.tenant_name,
+          name: data.tenant_name.trim(),
           plan: 'free',
         })
         .select()
@@ -36,17 +37,16 @@ export const TenantManagement = () => {
 
       if (tenantError) {
         toast.error(`Erro ao criar tenant: ${tenantError.message}`);
-        setIsSubmitting(false);
         return;
       }
 
       // Step 2: Create Admin User
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.admin_email,
-        password: formData.admin_password,
+        email: data.admin_email.trim(),
+        password: data.admin_password,
         options: {
           data: {
-            full_name: formData.admin_name,
+            full_name: data.admin_name.trim(),
           },
           emailRedirectTo: `${window.location.origin}/`,
         },
@@ -54,13 +54,11 @@ export const TenantManagement = () => {
 
       if (authError) {
         toast.error(`Erro ao criar usuário admin: ${authError.message}`);
-        setIsSubmitting(false);
         return;
       }
 
       if (!authData.user) {
         toast.error('Erro ao criar usuário admin');
-        setIsSubmitting(false);
         return;
       }
 
@@ -69,13 +67,12 @@ export const TenantManagement = () => {
         .from('profiles')
         .insert({
           id: authData.user.id,
-          full_name: formData.admin_name,
+          full_name: data.admin_name.trim(),
           tenant_id: tenantData.id,
         });
 
       if (profileError) {
         toast.error(`Erro ao criar perfil do admin: ${profileError.message}`);
-        setIsSubmitting(false);
         return;
       }
 
@@ -89,26 +86,18 @@ export const TenantManagement = () => {
 
       if (roleError) {
         toast.error(`Erro ao atribuir papel de admin: ${roleError.message}`);
-        setIsSubmitting(false);
         return;
       }
 
       // Success!
       toast.success(
-        `Tenant "${formData.tenant_name}" e Admin inicial configurados com sucesso! Um email de ativação foi enviado para ${formData.admin_email}.`
+        `Tenant "${data.tenant_name}" e Admin inicial configurados com sucesso! Um email de ativação foi enviado para ${data.admin_email}.`
       );
 
-      // Reset form
-      setFormData({
-        tenant_name: '',
-        admin_name: '',
-        admin_email: '',
-        admin_password: '',
-      });
-    } catch (error: any) {
-      toast.error(`Erro inesperado: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
+      form.reset();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro inesperado: ${errorMessage}`);
     }
   };
 
@@ -134,66 +123,77 @@ export const TenantManagement = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="tenant_name">Nome do Novo Tenant *</Label>
-            <Input
-              id="tenant_name"
-              placeholder="Ex: Empresa XYZ"
-              value={formData.tenant_name}
-              onChange={(e) => setFormData({ ...formData, tenant_name: e.target.value })}
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="tenant_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do Novo Tenant *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Empresa XYZ" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="pt-4 border-t">
-            <h3 className="font-semibold mb-4">Administrador Inicial</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="admin_name">Nome do Administrador Inicial *</Label>
-                <Input
-                  id="admin_name"
-                  placeholder="Nome completo"
-                  value={formData.admin_name}
-                  onChange={(e) => setFormData({ ...formData, admin_name: e.target.value })}
-                  required
+            <div className="pt-4 border-t">
+              <h3 className="font-semibold mb-4">Administrador Inicial</h3>
+
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="admin_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Administrador Inicial *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nome completo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <Label htmlFor="admin_email">Email do Administrador Inicial *</Label>
-                <Input
-                  id="admin_email"
-                  type="email"
-                  placeholder="admin@empresa.com"
-                  value={formData.admin_email}
-                  onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
-                  required
+                <FormField
+                  control={form.control}
+                  name="admin_email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email do Administrador Inicial *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="admin@empresa.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <Label htmlFor="admin_password">Senha Inicial do Admin *</Label>
-                <Input
-                  id="admin_password"
-                  type="password"
-                  placeholder="Mínimo 6 caracteres"
-                  value={formData.admin_password}
-                  onChange={(e) => setFormData({ ...formData, admin_password: e.target.value })}
-                  required
-                  minLength={6}
+                <FormField
+                  control={form.control}
+                  name="admin_password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha Inicial do Admin *</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Mínimo 6 caracteres" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Criando...' : 'Criar Tenant'}
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end pt-4">
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Criando...' : 'Criar Tenant'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
