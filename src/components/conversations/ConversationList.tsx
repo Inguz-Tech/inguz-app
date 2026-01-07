@@ -10,12 +10,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Search, Bot, MessageSquarePlus, MessageSquare, CalendarIcon, X } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
-import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatBrazilianPhone, stripWhatsAppFormatting } from '@/lib/utils';
 import { analytics } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { DateRangeFilter } from '@/hooks/useConversationsList';
 
 interface ConversationListProps {
   selectedConversationId: string | null;
@@ -30,26 +31,19 @@ export const ConversationList = ({
 }: ConversationListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const { data: conversations, isLoading, isError, refetch } = useConversationsList();
+  
+  // Converter DateRange para DateRangeFilter para o hook
+  const dateRangeFilter: DateRangeFilter | undefined = dateRange?.from 
+    ? { from: dateRange.from, to: dateRange.to } 
+    : undefined;
+  
+  const { data: conversations, isLoading, isError, refetch } = useConversationsList(undefined, dateRangeFilter);
 
-  const filteredConversations = conversations?.filter(conv => {
-    const matchesSearch = conv.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.contact_phone.includes(searchTerm);
-    
-    if (!matchesSearch) return false;
-    
-    if (dateRange?.from) {
-      const messageDate = new Date(conv.last_message_at);
-      const from = startOfDay(dateRange.from);
-      const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-      
-      if (!isWithinInterval(messageDate, { start: from, end: to })) {
-        return false;
-      }
-    }
-    
-    return true;
-  });
+  // Filtro apenas por texto (data já é filtrada no banco)
+  const filteredConversations = conversations?.filter(conv => 
+    conv.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conv.contact_phone.includes(searchTerm)
+  );
 
   return (
     <div className="h-full flex flex-col bg-background">
