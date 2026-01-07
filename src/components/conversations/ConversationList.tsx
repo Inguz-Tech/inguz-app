@@ -8,6 +8,7 @@ import { useConversationsList } from '@/hooks/useConversationsList';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatBrazilianPhone, stripWhatsAppFormatting } from '@/lib/utils';
+import { analytics } from '@/lib/analytics';
 
 interface ConversationListProps {
   selectedConversationId: string | null;
@@ -68,7 +69,10 @@ export const ConversationList = ({
                 className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 active:bg-muted ${
                   selectedConversationId === conv.id ? 'bg-muted' : ''
                 }`}
-                onClick={() => onSelectConversation(conv.id, conv.contact_id)}
+                onClick={() => {
+                  analytics.selectConversation(conv.id);
+                  onSelectConversation(conv.id, conv.contact_id);
+                }}
               >
                 <div className="flex items-start gap-3">
                   <Avatar className="h-12 w-12 flex-shrink-0">

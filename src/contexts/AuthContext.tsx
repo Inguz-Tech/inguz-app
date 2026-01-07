@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { analytics } from '@/lib/analytics';
 
 interface Profile {
   id: string;
@@ -133,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    analytics.logout();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

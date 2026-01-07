@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { analytics } from '@/lib/analytics';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -29,6 +30,7 @@ const Signup = () => {
     const { error } = await signup(email, password, name);
 
     if (!error) {
+      analytics.signup('email');
       toast.success('Conta criada! Verifique seu email para confirmar.');
       navigate('/login');
     } else {

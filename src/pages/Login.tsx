@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { analytics } from '@/lib/analytics';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -21,6 +22,7 @@ const Login = () => {
     const { error } = await login(email, password);
 
     if (!error) {
+      analytics.login('email');
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } else {
