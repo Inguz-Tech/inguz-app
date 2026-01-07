@@ -6,12 +6,16 @@ import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Search, Bot, MessageSquarePlus, MessageSquare } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Search, Bot, MessageSquarePlus, MessageSquare, CalendarIcon, X } from 'lucide-react';
 import { useConversationsList } from '@/hooks/useConversationsList';
-import { format } from 'date-fns';
+import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatBrazilianPhone, stripWhatsAppFormatting } from '@/lib/utils';
 import { analytics } from '@/lib/analytics';
+import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 interface ConversationListProps {
   selectedConversationId: string | null;
@@ -25,12 +29,27 @@ export const ConversationList = ({
   isMobile = false
 }: ConversationListProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const { data: conversations, isLoading, isError, refetch } = useConversationsList();
 
-  const filteredConversations = conversations?.filter(conv => 
-    conv.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.contact_phone.includes(searchTerm)
-  );
+  const filteredConversations = conversations?.filter(conv => {
+    const matchesSearch = conv.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      conv.contact_phone.includes(searchTerm);
+    
+    if (!matchesSearch) return false;
+    
+    if (dateRange?.from) {
+      const messageDate = new Date(conv.last_message_at);
+      const from = startOfDay(dateRange.from);
+      const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+      
+      if (!isWithinInterval(messageDate, { start: from, end: to })) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -48,7 +67,7 @@ export const ConversationList = ({
       )}
 
       {/* Search Bar */}
-      <div className="p-4 border-b bg-card">
+      <div className="p-4 border-b bg-card space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -57,6 +76,59 @@ export const ConversationList = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
           />
+        </div>
+        
+        {/* Date Range Filter */}
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "justify-start text-left font-normal flex-1",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd/MM/yy", { locale: ptBR })} -{" "}
+                      {format(dateRange.to, "dd/MM/yy", { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                  )
+                ) : (
+                  <span>Filtrar por data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50 bg-popover" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={1}
+                locale={ptBR}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          
+          {dateRange && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDateRange(undefined)}
+              className="px-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
