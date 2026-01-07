@@ -39,8 +39,8 @@ export const useConversationsList = (agentId?: string, dateRange?: DateRangeFilt
         const { data: messagesInRange, error: messagesError } = await supabase
           .from('messages')
           .select('conversation_id')
-          .gte('created_at', fromDate.toISOString())
-          .lte('created_at', toDate.toISOString());
+          .gte('timestamp', fromDate.toISOString())
+          .lte('timestamp', toDate.toISOString());
 
         if (messagesError) {
           throw new Error(`Erro ao buscar mensagens: ${messagesError.message}`);
