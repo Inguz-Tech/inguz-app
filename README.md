@@ -1,73 +1,142 @@
-# Welcome to your Lovable project
+# Inguz.Tech - Plataforma de Atendimento WhatsApp
 
-## Project info
+Sistema de gestão de conversas WhatsApp com agentes de IA para atendimento automatizado.
 
-**URL**: https://lovable.dev/projects/4b5b4662-2edb-4850-be9e-6a7b64007562
+## 🚀 Visão Geral
 
-## How can I edit this code?
+Esta aplicação permite gerenciar conversas de WhatsApp através de agentes de IA, com dashboard analítico, gestão de contatos e administração multi-tenant.
 
-There are several ways of editing your application.
+## 📁 Estrutura do Projeto
 
-**Use Lovable**
+```
+src/
+├── components/
+│   ├── analytics/        # Componentes de analytics
+│   ├── conversations/    # Chat, lista de conversas, detalhes
+│   ├── layout/           # Header, navegação
+│   ├── settings/         # Gestão de tenants e usuários
+│   └── ui/               # Componentes base (shadcn/ui)
+├── contexts/
+│   └── AuthContext.tsx   # Contexto de autenticação
+├── hooks/
+│   ├── useAgents.ts              # Hook para agentes
+│   ├── useAgentStats.ts          # Estatísticas de agentes
+│   ├── useContactDetails.ts      # Detalhes de contato
+│   ├── useConversationContent.ts # Mensagens da conversa
+│   ├── useConversationsList.ts   # Lista de conversas
+│   ├── useDashboardMetrics.ts    # Métricas do dashboard
+│   └── useGraphData.ts           # Dados para gráficos
+├── lib/
+│   ├── analytics.ts      # Tracking de eventos
+│   ├── supabase.ts       # Cliente Supabase
+│   ├── utils.ts          # Utilitários
+│   └── validations.ts    # Schemas Zod
+├── pages/
+│   ├── Agents.tsx        # Gestão de agentes
+│   ├── Conversations.tsx # Tela de conversas
+│   ├── Dashboard.tsx     # Dashboard principal
+│   ├── Landing.tsx       # Página inicial
+│   ├── Login.tsx         # Autenticação
+│   ├── Settings.tsx      # Configurações
+│   └── Signup.tsx        # Cadastro
+└── docs/
+    ├── ARCHITECTURE.md   # Decisões técnicas
+    └── PERMISSIONS.md    # Matriz de permissões
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4b5b4662-2edb-4850-be9e-6a7b64007562) and start prompting.
+## 🛠 Tecnologias
 
-Changes made via Lovable will be committed automatically to this repo.
+| Categoria | Tecnologia |
+|-----------|------------|
+| Frontend | React 18, TypeScript, Vite |
+| Estilização | Tailwind CSS, shadcn/ui |
+| Estado | TanStack Query (React Query) |
+| Formulários | React Hook Form + Zod |
+| Animações | Framer Motion |
+| Backend | Supabase (PostgreSQL, Auth, RLS) |
+| Gráficos | Recharts |
 
-**Use your preferred IDE**
+## 🔧 Configuração Local
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Pré-requisitos
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js 18+ 
+- npm ou bun
 
-Follow these steps:
+### Instalação
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clonar repositório
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Instalar dependências
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Iniciar servidor de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Variáveis de Ambiente
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+O projeto utiliza Supabase. Configure as variáveis no arquivo `.env.local`:
 
-**Use GitHub Codespaces**
+```env
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-anon-key
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔐 Segurança
 
-## What technologies are used for this project?
+### Validação de Formulários
 
-This project is built with:
+Todos os formulários utilizam validação Zod:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```typescript
+import { loginSchema } from '@/lib/validations';
 
-## How can I deploy this project?
+// Schemas disponíveis:
+// - loginSchema
+// - signupSchema
+// - tenantSchema
+// - createUserSchema
+// - updateUserSchema
+```
 
-Simply open [Lovable](https://lovable.dev/projects/4b5b4662-2edb-4850-be9e-6a7b64007562) and click on Share -> Publish.
+### Isolamento de Tenant
 
-## Can I connect a custom domain to my Lovable project?
+Todas as queries incluem filtro `tenant_id` para garantir isolamento de dados entre organizações.
 
-Yes, you can!
+### Row Level Security (RLS)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+O banco de dados utiliza RLS para proteção em nível de linha. Veja `docs/PERMISSIONS.md` para detalhes.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📊 Testes
+
+```bash
+# Executar testes unitários
+npm run test
+
+# Modo watch
+npx vitest
+```
+
+Os testes de validação estão em `src/lib/__tests__/validations.test.ts`.
+
+## 📚 Documentação Adicional
+
+- [Arquitetura](./docs/ARCHITECTURE.md) - Decisões técnicas e padrões
+- [Permissões](./docs/PERMISSIONS.md) - Matriz de permissões por role
+
+## 🚀 Deploy
+
+O deploy é feito automaticamente via Lovable:
+
+1. Abra o [projeto no Lovable](https://lovable.dev/projects/4b5b4662-2edb-4850-be9e-6a7b64007562)
+2. Clique em **Share → Publish**
+
+Para domínio personalizado: **Project → Settings → Domains**
+
+## 📄 Licença
+
+Projeto privado - Todos os direitos reservados.
