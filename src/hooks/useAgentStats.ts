@@ -20,8 +20,7 @@ export const useAgentStats = (tenantId: string | undefined) => {
         .eq('tenant_id', tenantId);
 
       if (error) {
-        console.error('Error fetching agent stats:', error);
-        return {};
+        throw new Error(`Erro ao buscar estatísticas: ${error.message}`);
       }
 
       // Contar conversas por agente
