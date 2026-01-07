@@ -28,12 +28,7 @@ export const useDashboardMetrics = (tenantId: string | undefined, startDate: Dat
       });
 
       if (error) {
-        console.error('Error fetching dashboard metrics:', error);
-        return {
-          totalConversations: 0,
-          messagesSent: 0,
-          messagesReceived: 0,
-        };
+        throw new Error(`Erro ao buscar métricas: ${error.message}`);
       }
 
       // A função RPC retorna um array, pegar o primeiro elemento

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ConversationItem {
   id: string;
@@ -11,15 +12,23 @@ export interface ConversationItem {
 }
 
 export const useConversationsList = (agentId?: string) => {
+  const { profile } = useAuth();
+  const tenantId = profile?.tenant_id;
+
   return useQuery({
-    queryKey: ['conversations-list', agentId],
+    queryKey: ['conversations-list', agentId, tenantId],
     queryFn: async (): Promise<ConversationItem[]> => {
+      if (!tenantId) {
+        return [];
+      }
+
       let query = supabase
         .from('conversations')
         .select(`
           id,
           contact_id,
           last_message_at,
+          tenant_id,
           contacts (
             name,
             phone
@@ -28,6 +37,7 @@ export const useConversationsList = (agentId?: string) => {
             content
           )
         `)
+        .eq('tenant_id', tenantId)
         .order('last_message_at', { ascending: false })
         .limit(50);
 
@@ -38,12 +48,10 @@ export const useConversationsList = (agentId?: string) => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching conversations:', error);
-        return [];
+        throw new Error(`Erro ao buscar conversas: ${error.message}`);
       }
 
       return (data || []).map((conv: any) => {
-        // Get the last message from the array (assuming they're in order)
         const messages = conv.messages || [];
         const lastMessage = messages[messages.length - 1];
         
@@ -57,5 +65,6 @@ export const useConversationsList = (agentId?: string) => {
         };
       });
     },
+    enabled: !!tenantId,
   });
 };

@@ -20,12 +20,11 @@ export const useAgents = (tenantId: string | undefined) => {
 
       const { data, error } = await supabase
         .from('agents')
-        .select('*')
+        .select('id, name, description, is_active, tenant_id, whatsapp_number')
         .eq('tenant_id', tenantId);
 
       if (error) {
-        console.error('Error fetching agents:', error);
-        return [];
+        throw new Error(`Erro ao buscar agentes: ${error.message}`);
       }
 
       return data || [];

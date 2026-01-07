@@ -58,8 +58,7 @@ export const useGraphData = (tenantId: string | undefined, startDate: Date, endD
       });
 
       if (error) {
-        console.error('Error fetching graph data:', error);
-        return Array.from(periodMap.values());
+        throw new Error(`Erro ao buscar dados do gráfico: ${error.message}`);
       }
 
       // Merge database data with generated periods

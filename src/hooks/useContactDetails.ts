@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ContactDetails {
   id: string;
@@ -11,22 +12,29 @@ export interface ContactDetails {
 }
 
 export const useContactDetails = (contactId: string) => {
+  const { profile } = useAuth();
+  const tenantId = profile?.tenant_id;
+
   return useQuery({
-    queryKey: ['contact-details', contactId],
+    queryKey: ['contact-details', contactId, tenantId],
     queryFn: async (): Promise<ContactDetails | null> => {
+      if (!tenantId) {
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('contacts')
-        .select('id, name, phone, status, tags, variables')
+        .select('id, name, phone, status, tags, variables, tenant_id')
         .eq('id', contactId)
-        .single();
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching contact details:', error);
-        return null;
+        throw new Error(`Erro ao buscar contato: ${error.message}`);
       }
 
       return data;
     },
-    enabled: !!contactId,
+    enabled: !!contactId && !!tenantId,
   });
 };
