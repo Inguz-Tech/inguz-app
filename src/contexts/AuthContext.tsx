@@ -26,7 +26,7 @@ interface AuthContextType {
   tenant: Tenant | null;
   role: 'master_admin' | 'admin' | 'viewer' | null;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
-  signup: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string, name: string, companyName: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, companyName: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -109,11 +109,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: name,
+          company_name: companyName,
         },
       },
     });
 
     if (error) {
+      // Tratar erro de email já cadastrado
+      if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+        return { error: 'Este email já está cadastrado. Faça login ou use outro email.' };
+      }
       return { error: error.message };
     }
 

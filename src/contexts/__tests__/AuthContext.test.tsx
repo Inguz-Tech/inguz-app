@@ -255,7 +255,7 @@ describe('AuthContext', () => {
         const { signup } = useAuth();
         
         const handleSignup = async () => {
-          signupResult = await signup('new@example.com', 'password123', 'New User');
+          signupResult = await signup('new@example.com', 'Password123', 'New User', 'New Company');
         };
         
         return <button onClick={handleSignup}>Signup</button>;
