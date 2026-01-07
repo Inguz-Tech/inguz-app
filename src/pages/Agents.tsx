@@ -2,6 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Plus, Bot, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAgents } from '@/hooks/useAgents';
@@ -10,8 +13,9 @@ import { formatBrazilianPhone } from '@/lib/utils';
 
 const Agents = () => {
   const { tenant } = useAuth();
-  const { data: agents, isLoading } = useAgents(tenant?.id);
+  const { data: agents, isLoading, isError, refetch } = useAgents(tenant?.id);
   const { data: agentStats } = useAgentStats(tenant?.id);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -24,9 +28,13 @@ const Agents = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Carregando agentes...</p>
-          </div>
+          <LoadingState message="Carregando agentes..." />
+        ) : isError ? (
+          <ErrorState 
+            title="Erro ao carregar agentes"
+            message="Não foi possível carregar a lista de agentes."
+            onRetry={() => refetch()}
+          />
         ) : agents && agents.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {agents.map((agent) => (
@@ -70,19 +78,17 @@ const Agents = () => {
             ))}
           </div>
         ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Bot className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium mb-2">Nenhum agente cadastrado</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Crie seu primeiro agente para começar
-              </p>
+          <EmptyState
+            title="Nenhum agente cadastrado"
+            message="Crie seu primeiro agente para começar"
+            icon={<Bot className="h-6 w-6 text-muted-foreground" />}
+            action={
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Primeiro Agente
               </Button>
-            </CardContent>
-          </Card>
+            }
+          />
         )}
       </div>
     </div>
