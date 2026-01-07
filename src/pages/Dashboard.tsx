@@ -12,17 +12,26 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { cn } from '@/lib/utils';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useGraphData } from '@/hooks/useGraphData';
+import { DateRange } from 'react-day-picker';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { tenant } = useAuth();
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 7),
     to: new Date(),
   });
 
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(tenant?.id, dateRange.from, dateRange.to);
-  const { data: graphData, isLoading: graphLoading } = useGraphData(tenant?.id, dateRange.from, dateRange.to);
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(
+    tenant?.id, 
+    dateRange.from || subDays(new Date(), 7), 
+    dateRange.to || new Date()
+  );
+  const { data: graphData, isLoading: graphLoading } = useGraphData(
+    tenant?.id, 
+    dateRange.from || subDays(new Date(), 7), 
+    dateRange.to || new Date()
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,15 +42,28 @@ const Dashboard = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn('justify-start text-left font-normal')}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} -{' '}
-                {format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} -{' '}
+                      {format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}
+                    </>
+                  ) : (
+                    format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })
+                  )
+                ) : (
+                  <span>Selecione o período</span>
+                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
-                mode="single"
-                selected={dateRange.from}
-                onSelect={(date) => date && setDateRange({ ...dateRange, from: date })}
+                mode="range"
+                selected={dateRange}
+                onSelect={(range) => range && setDateRange(range)}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
