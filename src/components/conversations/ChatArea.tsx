@@ -91,33 +91,58 @@ export const ChatArea = ({
               </Button>
             )}
             
-            {/* Desktop: Action Buttons */}
-            {!isMobile && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" className="opacity-50 cursor-not-allowed">
-                      <ArrowRightLeft className="h-4 w-4 mr-2" />
-                      Transferir
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-muted text-muted-foreground">
-                    <p>Função indisponível</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="destructive" size="sm" className="opacity-50 cursor-not-allowed">
-                      <UserX className="h-4 w-4 mr-2" />
-                      Finalizar
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-muted text-muted-foreground">
-                    <p>Função indisponível</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            {/* 
+              ============================================================
+              BOTÕES DE AÇÃO - TEMPORARIAMENTE OCULTOS
+              ============================================================
+              
+              Os botões "Transferir" e "Finalizar" existem na estrutura do código
+              mas estão ocultos até que a funcionalidade seja implementada no backend.
+              
+              Para reativar, remova o comentário do bloco abaixo e adicione
+              os handlers correspondentes (handleTransfer, handleFinalize).
+              
+              Dependências necessárias:
+              - Endpoint de transferência de conversa
+              - Endpoint de finalização de conversa
+              - Lógica de permissões (verificar se usuário pode executar ação)
+              
+              {!isMobile && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleTransfer}
+                      >
+                        <ArrowRightLeft className="h-4 w-4 mr-2" />
+                        Transferir
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Transferir conversa para outro agente</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={handleFinalize}
+                      >
+                        <UserX className="h-4 w-4 mr-2" />
+                        Finalizar
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Finalizar conversa</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              ============================================================
+            */}
           </div>
         </div>
       </div>
