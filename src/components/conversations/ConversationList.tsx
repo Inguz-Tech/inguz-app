@@ -158,8 +158,9 @@ export const ConversationList = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-semibold text-sm truncate">{conv.contact_name}</p>
-                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                        {format(new Date(conv.last_message_at), 'HH:mm', { locale: ptBR })}
+                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2 text-right">
+                        <span className="block">{format(new Date(conv.last_message_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                        <span className="block">{format(new Date(conv.last_message_at), 'HH:mm', { locale: ptBR })}</span>
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{stripWhatsAppFormatting(conv.last_message_preview || '')}</p>
